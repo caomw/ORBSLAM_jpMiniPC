@@ -49,6 +49,10 @@ public:
 
 
     static int OptimizeSim3(KeyFrame* pKF1, KeyFrame* pKF2, std::vector<MapPoint *> &vpMatches1, g2o::Sim3 &g2oS12, float th2 = 10);
+
+	//Added by wangjing
+    void static LocalBundleAdjustmentWJ(KeyFrame* pKF, bool *pbStopFlag=NULL);
+	//
 };
 
 } //namespace ORB_SLAM
