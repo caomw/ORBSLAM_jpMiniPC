@@ -1,28 +1,38 @@
-# Compiled Object files
-*.slo
-*.lo
-*.o
-*.obj
+*.rbc
+*.sassc
+.sass-cache
+capybara-*.html
+.rspec
+/.bundle
+/vendor/bundle
+/log/*
+/tmp/*
+/db/*.sqlite3
+/public/system/*
+/coverage/
+/spec/tmp/*
+**.orig
+rerun.txt
+pickle-email-*.html
 
-# Precompiled Headers
-*.gch
-*.pch
+KeyFrameTrajectory.txt
+/Data/*
+/build/*
+/bin/*
+/lib/*
+/Thirdparty/DBoW2/build/*
+/Thirdparty/DBoW2/lib/*
+/Thirdparty/g2o/build/*
+/Thirdparty/g2o/lib/*
 
-# Compiled Dynamic libraries
-*.so
-*.dylib
-*.dll
-
-# Fortran module files
-*.mod
-
-# Compiled Static libraries
-*.lai
-*.la
-*.a
-*.lib
-
-# Executables
-*.exe
-*.out
-*.app
+*.IAB
+*.IAD
+*.IMD
+*.IMB
+*.PFI
+*.PO
+*.PR
+*.PRI
+*.PS
+*.SearchResults
+*.WK3
