@@ -360,36 +360,37 @@ void Optimizer::LocalBundleAdjustment(KeyFrame *pKF, bool* pbStopFlag)
     // SET LOCAL KEYFRAME VERTICES
     for(list<KeyFrame*>::iterator lit=lLocalKeyFrames.begin(), lend=lLocalKeyFrames.end(); lit!=lend; lit++)
     {
-    	if (lit==lLocalKeyFrames.begin())
-    	{
-        KeyFrame* pKFi = *lit;
-        cv::Mat tmpK = pKFi->GetCalibrationMatrix();
+    //Added by wangjing
+//    	if (lit==lLocalKeyFrames.begin())
+//    	{
+//        KeyFrame* pKFi = *lit;
+//        cv::Mat tmpK = pKFi->GetCalibrationMatrix();
 
-        //Sim3, scale =1, R/t is current value of SE3
-        g2o::Sim3 gScw(Converter::toMatrix3d(pKFi->GetRotation()),Converter::toVector3d(pKFi->GetTranslation()),1.0);
+//        //Sim3, scale =1, R/t is current value of SE3
+//        g2o::Sim3 gScw(Converter::toMatrix3d(pKFi->GetRotation()),Converter::toVector3d(pKFi->GetTranslation()),1.0);
 
-        g2o::VertexSim3Expmap * vSim3 = new g2o::VertexSim3Expmap();
-        vSim3->setEstimate(gScw);	//init value	
-        vSim3->setId(pKFi->mnId);
-        vSim3->setFixed(pKFi->mnId==0);
-        vSim3->_principle_point1[0] = tmpK.at<float>(0,2);
-        vSim3->_principle_point1[1] = tmpK.at<float>(1,2);
-        vSim3->_focal_length1[0] = tmpK.at<float>(0,0);
-        vSim3->_focal_length1[1] = tmpK.at<float>(1,1);
-        vSim3->_principle_point2[0] = tmpK.at<float>(0,2);
-        vSim3->_principle_point2[1] = tmpK.at<float>(1,2);
-        vSim3->_focal_length2[0] = tmpK.at<float>(0,0);
-        vSim3->_focal_length2[1] = tmpK.at<float>(1,1);
-        optimizer.addVertex(vSim3);
-        if(pKFi->mnId>maxKFid)
-            maxKFid=pKFi->mnId;
-	
+//        g2o::VertexSim3Expmap * vSim3 = new g2o::VertexSim3Expmap();
+//        vSim3->setEstimate(gScw);	//init value	
+//        vSim3->setId(pKFi->mnId);
+//        vSim3->setFixed(pKFi->mnId==0);
+//        vSim3->_principle_point1[0] = tmpK.at<float>(0,2);
+//        vSim3->_principle_point1[1] = tmpK.at<float>(1,2);
+//        vSim3->_focal_length1[0] = tmpK.at<float>(0,0);
+//        vSim3->_focal_length1[1] = tmpK.at<float>(1,1);
+//        vSim3->_principle_point2[0] = tmpK.at<float>(0,2);
+//        vSim3->_principle_point2[1] = tmpK.at<float>(1,2);
+//        vSim3->_focal_length2[0] = tmpK.at<float>(0,0);
+//        vSim3->_focal_length2[1] = tmpK.at<float>(1,1);
+//        optimizer.addVertex(vSim3);
+//        if(pKFi->mnId>maxKFid)
+//            maxKFid=pKFi->mnId;
+//	
 
 
 
-	}
-	else
-	{
+//	}
+//	else
+//	{
 		
         KeyFrame* pKFi = *lit;
         g2o::VertexSE3Expmap * vSE3 = new g2o::VertexSE3Expmap();
@@ -400,8 +401,8 @@ void Optimizer::LocalBundleAdjustment(KeyFrame *pKF, bool* pbStopFlag)
         if(pKFi->mnId>maxKFid)
             maxKFid=pKFi->mnId;
 
-	
-	}
+
+//	}
     }
 
     // SET FIXED KEYFRAME VERTICES
