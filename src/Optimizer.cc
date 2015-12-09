@@ -500,7 +500,7 @@ void Optimizer::LocalBundleAdjustment(KeyFrame *pKF, bool* pbStopFlag)
 
 
 	//Added by wangjing
-	cout<<"local BA, robust SUM_chi2(all inlier): "<<optimizer.activeRobustChi2()/(optimizer.activeEdges()+1e-4)<<endl;
+	cout<<"local BA, robust SUM_chi2(all inlier): "<<optimizer.activeRobustChi2()/(optimizer.activeEdges().size()+1e-4)<<endl;
 	//
 
 
