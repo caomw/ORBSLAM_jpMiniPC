@@ -451,7 +451,7 @@ void Optimizer::LocalBundleAdjustment(KeyFrame *pKF, bool* pbStopFlag)
     optimizer.optimize(5);
 
 	//Added by wangjing
-	cout<<"local BA, robust SUM_chi2: "<<optimizer.activeRobustChi2()/(optimizer.activeEdges().size()+1e-4)<<endl;
+//	cout<<"local BA, robust SUM_chi2: "<<optimizer.activeRobustChi2()/(optimizer.activeEdges().size()+1e-4)<<endl;
 	//
 
     // Check inlier observations
@@ -500,7 +500,7 @@ void Optimizer::LocalBundleAdjustment(KeyFrame *pKF, bool* pbStopFlag)
 
 
 	//Added by wangjing
-	cout<<"local BA, robust SUM_chi2(all inlier): "<<optimizer.activeRobustChi2()/(optimizer.activeEdges().size()+1e-4)<<endl;
+//	cout<<"local BA, robust SUM_chi2(all inlier): "<<optimizer.activeRobustChi2()/(optimizer.activeEdges().size()+1e-4)<<endl;
 	//
 
 
@@ -558,7 +558,7 @@ void Optimizer::LocalBundleAdjustmentWJ(KeyFrame *pKF, bool* pbStopFlag)
     pKF->mnBALocalForKF = pKF->mnId;
 
 	//Added by wangjing
-	cv::Mat tmpK = pKFi->GetCalibrationMatrix();
+	cv::Mat tmpK = pKF->GetCalibrationMatrix();
 
     vector<KeyFrame*> vNeighKFs = pKF->GetVectorCovisibleKeyFrames();
     for(int i=0, iend=vNeighKFs.size(); i<iend; i++)
@@ -628,35 +628,35 @@ void Optimizer::LocalBundleAdjustmentWJ(KeyFrame *pKF, bool* pbStopFlag)
     for(list<KeyFrame*>::iterator lit=lLocalKeyFrames.begin(), lend=lLocalKeyFrames.end(); lit!=lend; lit++)
     {
     //Added by wangjing
-//    	if (lit==lLocalKeyFrames.begin())
-//    	{
-//        KeyFrame* pKFi = *lit;
+    	if (lit==lLocalKeyFrames.begin())
+    	{
+        KeyFrame* pKFi = *lit;
 
-//        //Sim3, scale =1, R/t is current value of SE3
-//        g2o::Sim3 gScw(Converter::toMatrix3d(pKFi->GetRotation()),Converter::toVector3d(pKFi->GetTranslation()),1.0);
+        //Sim3, scale =1, R/t is current value of SE3
+        g2o::Sim3 gScw(Converter::toMatrix3d(pKFi->GetRotation()),Converter::toVector3d(pKFi->GetTranslation()),1.0);
 
-//        g2o::VertexSim3Expmap * vSim3 = new g2o::VertexSim3Expmap();
-//        vSim3->setEstimate(gScw);	//init value	
-//        vSim3->setId(pKFi->mnId);
-//        vSim3->setFixed(false);
-//        vSim3->_principle_point1[0] = tmpK.at<float>(0,2);
-//        vSim3->_principle_point1[1] = tmpK.at<float>(1,2);
-//        vSim3->_focal_length1[0] = tmpK.at<float>(0,0);
-//        vSim3->_focal_length1[1] = tmpK.at<float>(1,1);
-//        vSim3->_principle_point2[0] = tmpK.at<float>(0,2);
-//        vSim3->_principle_point2[1] = tmpK.at<float>(1,2);
-//        vSim3->_focal_length2[0] = tmpK.at<float>(0,0);
-//        vSim3->_focal_length2[1] = tmpK.at<float>(1,1);
-//        optimizer.addVertex(vSim3);
-//        if(pKFi->mnId>maxKFid)
-//            maxKFid=pKFi->mnId;
-//	
+        g2o::VertexSim3Expmap * vSim3 = new g2o::VertexSim3Expmap();
+        vSim3->setEstimate(gScw);	//init value	
+        vSim3->setId(pKFi->mnId);
+        vSim3->setFixed(false);
+        vSim3->_principle_point1[0] = tmpK.at<float>(0,2);
+        vSim3->_principle_point1[1] = tmpK.at<float>(1,2);
+        vSim3->_focal_length1[0] = tmpK.at<float>(0,0);
+        vSim3->_focal_length1[1] = tmpK.at<float>(1,1);
+        vSim3->_principle_point2[0] = tmpK.at<float>(0,2);
+        vSim3->_principle_point2[1] = tmpK.at<float>(1,2);
+        vSim3->_focal_length2[0] = tmpK.at<float>(0,0);
+        vSim3->_focal_length2[1] = tmpK.at<float>(1,1);
+        optimizer.addVertex(vSim3);
+        if(pKFi->mnId>maxKFid)
+            maxKFid=pKFi->mnId;
+	
 
 
 
-//	}
-//	else
-//	{
+	}
+	else
+	{
 		
         KeyFrame* pKFi = *lit;
         g2o::VertexSE3Expmap * vSE3 = new g2o::VertexSE3Expmap();
@@ -668,7 +668,7 @@ void Optimizer::LocalBundleAdjustmentWJ(KeyFrame *pKF, bool* pbStopFlag)
             maxKFid=pKFi->mnId;
 
 
-//	}
+	}
     }
 
     // SET FIXED KEYFRAME VERTICES
@@ -748,7 +748,7 @@ void Optimizer::LocalBundleAdjustmentWJ(KeyFrame *pKF, bool* pbStopFlag)
 	                optimizer.addEdge(e);
 					//Added by wangjing
 	//                vpEdges.push_back(e);
-					vpEdges.push_back(static_cast<void*>e);
+					vpEdges.push_back(static_cast<void*>(e));
 					//
 	                vpEdgeKF.push_back(pKFi);
 	                vSigmas2.push_back(sigma2);
@@ -777,7 +777,7 @@ void Optimizer::LocalBundleAdjustmentWJ(KeyFrame *pKF, bool* pbStopFlag)
 					rk->setDelta(thHuber);
 	
 					optimizer.addEdge(e);
-					vpEdges.push_back(static_cast<void*>e);
+					vpEdges.push_back(static_cast<void*>(e));
 					vpEdgeKF.push_back(pKFi);
 					vSigmas2.push_back(sigma2);
 					vpMapPointEdge.push_back(pMP);
@@ -799,7 +799,7 @@ void Optimizer::LocalBundleAdjustmentWJ(KeyFrame *pKF, bool* pbStopFlag)
     	if(vpEdgeKF[i]!=pKF)
     	{
     	//
-	        g2o::EdgeSE3ProjectXYZ* e = static_cast<g2o::EdgeSE3ProjectXYZ*>vpEdges[i];
+	        g2o::EdgeSE3ProjectXYZ* e = static_cast<g2o::EdgeSE3ProjectXYZ*>(vpEdges[i]);
 	        MapPoint* pMP = vpMapPointEdge[i];
 
 	        if(pMP->isBad())
@@ -818,13 +818,13 @@ void Optimizer::LocalBundleAdjustmentWJ(KeyFrame *pKF, bool* pbStopFlag)
 		else	//
 		{
     	//
-	        g2o::EdgeSim3ProjectXYZ* e = static_cast<g2o::EdgeSim3ProjectXYZ*>vpEdges[i];
+	        g2o::EdgeSim3ProjectXYZ* e = static_cast<g2o::EdgeSim3ProjectXYZ*>(vpEdges[i]);
 	        MapPoint* pMP = vpMapPointEdge[i];
 
 	        if(pMP->isBad())
 	            continue;
 
-			const g2o::VertexContainer tmpv = e->vertices();
+			const g2o::SparseOptimizer::VertexContainer tmpv = e->vertices();
 			const g2o::VertexSim3Expmap* v1 = static_cast<const g2o::VertexSim3Expmap*>(tmpv[1]);
 			const g2o::VertexSBAPointXYZ* v2 = static_cast<const g2o::VertexSBAPointXYZ*>(tmpv[0]);
 			double tmpdepth = (v1->estimate().map(v2->estimate()))(2);
