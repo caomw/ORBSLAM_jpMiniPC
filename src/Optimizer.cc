@@ -637,7 +637,7 @@ void Optimizer::LocalBundleAdjustmentWJ(KeyFrame *pKF, bool* pbStopFlag)
 //        g2o::VertexSim3Expmap * vSim3 = new g2o::VertexSim3Expmap();
 //        vSim3->setEstimate(gScw);	//init value	
 //        vSim3->setId(pKFi->mnId);
-//        vSim3->setFixed(pKFi->mnId==0);
+//        vSim3->setFixed(false);
 //        vSim3->_principle_point1[0] = tmpK.at<float>(0,2);
 //        vSim3->_principle_point1[1] = tmpK.at<float>(1,2);
 //        vSim3->_focal_length1[0] = tmpK.at<float>(0,0);
