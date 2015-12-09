@@ -630,45 +630,45 @@ void Optimizer::LocalBundleAdjustmentWJ(KeyFrame *pKF, bool* pbStopFlag)
     //Added by wangjing
     	if (lit==lLocalKeyFrames.begin())
     	{
-        KeyFrame* pKFi = *lit;
+	        KeyFrame* pKFi = *lit;
 
-        //Sim3, scale =1, R/t is current value of SE3
-        g2o::Sim3 gScw(Converter::toMatrix3d(pKFi->GetRotation()),Converter::toVector3d(pKFi->GetTranslation()),1.0);
+	        //Sim3, scale =1, R/t is current value of SE3
+	        g2o::Sim3 gScw(Converter::toMatrix3d(pKFi->GetRotation()),Converter::toVector3d(pKFi->GetTranslation()),1.0);
 
-        g2o::VertexSim3Expmap * vSim3 = new g2o::VertexSim3Expmap();
-        vSim3->setEstimate(gScw);	//init value	
-        vSim3->setId(pKFi->mnId);
-        vSim3->setFixed(false);
-        vSim3->_principle_point1[0] = tmpK.at<float>(0,2);
-        vSim3->_principle_point1[1] = tmpK.at<float>(1,2);
-        vSim3->_focal_length1[0] = tmpK.at<float>(0,0);
-        vSim3->_focal_length1[1] = tmpK.at<float>(1,1);
-        vSim3->_principle_point2[0] = tmpK.at<float>(0,2);
-        vSim3->_principle_point2[1] = tmpK.at<float>(1,2);
-        vSim3->_focal_length2[0] = tmpK.at<float>(0,0);
-        vSim3->_focal_length2[1] = tmpK.at<float>(1,1);
-        optimizer.addVertex(vSim3);
-        if(pKFi->mnId>maxKFid)
-            maxKFid=pKFi->mnId;
-	
-
-
-
-	}
-	else
-	{
+	        g2o::VertexSim3Expmap * vSim3 = new g2o::VertexSim3Expmap();
+	        vSim3->setEstimate(gScw);	//init value	
+	        vSim3->setId(pKFi->mnId);
+	        vSim3->setFixed(false);
+	        vSim3->_principle_point1[0] = tmpK.at<float>(0,2);
+	        vSim3->_principle_point1[1] = tmpK.at<float>(1,2);
+	        vSim3->_focal_length1[0] = tmpK.at<float>(0,0);
+	        vSim3->_focal_length1[1] = tmpK.at<float>(1,1);
+	        vSim3->_principle_point2[0] = tmpK.at<float>(0,2);
+	        vSim3->_principle_point2[1] = tmpK.at<float>(1,2);
+	        vSim3->_focal_length2[0] = tmpK.at<float>(0,0);
+	        vSim3->_focal_length2[1] = tmpK.at<float>(1,1);
+	        optimizer.addVertex(vSim3);
+	        if(pKFi->mnId>maxKFid)
+	            maxKFid=pKFi->mnId;
 		
-        KeyFrame* pKFi = *lit;
-        g2o::VertexSE3Expmap * vSE3 = new g2o::VertexSE3Expmap();
-        vSE3->setEstimate(Converter::toSE3Quat(pKFi->GetPose()));
-        vSE3->setId(pKFi->mnId);
-        vSE3->setFixed(pKFi->mnId==0);
-        optimizer.addVertex(vSE3);
-        if(pKFi->mnId>maxKFid)
-            maxKFid=pKFi->mnId;
 
 
-	}
+
+		}
+		else
+		{
+			
+	        KeyFrame* pKFi = *lit;
+	        g2o::VertexSE3Expmap * vSE3 = new g2o::VertexSE3Expmap();
+	        vSE3->setEstimate(Converter::toSE3Quat(pKFi->GetPose()));
+	        vSE3->setId(pKFi->mnId);
+	        vSE3->setFixed(pKFi->mnId==0);
+	        optimizer.addVertex(vSE3);
+	        if(pKFi->mnId>maxKFid)
+	            maxKFid=pKFi->mnId;
+
+
+		}
     }
 
     // SET FIXED KEYFRAME VERTICES
@@ -846,22 +846,36 @@ void Optimizer::LocalBundleAdjustmentWJ(KeyFrame *pKF, bool* pbStopFlag)
 
     // Recover optimized data
 
-	//To here
-	//To here
-	//To here
-	//To here
-	//To here
-	//To here
-	//To here
-
-
     //Keyframes
     for(list<KeyFrame*>::iterator lit=lLocalKeyFrames.begin(), lend=lLocalKeyFrames.end(); lit!=lend; lit++)
     {
-        KeyFrame* pKF = *lit;
-        g2o::VertexSE3Expmap* vSE3 = static_cast<g2o::VertexSE3Expmap*>(optimizer.vertex(pKF->mnId));
-        g2o::SE3Quat SE3quat = vSE3->estimate();
-        pKF->SetPose(Converter::toCvMat(SE3quat));
+        KeyFrame* pKFi = *lit;
+		//Added by wangjing
+		if(pKFi != pKF)
+		{
+	        g2o::VertexSE3Expmap* vSE3 = static_cast<g2o::VertexSE3Expmap*>(optimizer.vertex(pKFi->mnId));
+	        g2o::SE3Quat SE3quat = vSE3->estimate();
+	        pKFi->SetPose(Converter::toCvMat(SE3quat));
+		}
+		else
+		{
+			g2o::VertexSim3Expmap* vSim3 = static_cast<g2o::VertexSim3Expmap*>(optimizer.vertex(pKFi->mnId));
+
+			g2o::Sim3 CorrectedSiw =  vSim3->estimate();
+//				vCorrectedSwc[nIDi]=CorrectedSiw.inverse();
+			Eigen::Matrix3d eigR = CorrectedSiw.rotation().toRotationMatrix();
+			Eigen::Vector3d eigt = CorrectedSiw.translation();
+			double s = CorrectedSiw.scale();
+
+			printf("scale: %.5f\n",s);
+			
+			eigt *=(1./s); //[R t/s;0 1]
+				
+			cv::Mat Tiw = Converter::toCvSE3(eigR,eigt);
+				
+			pKFi->SetPose(Tiw);
+
+		}
     }
     //Points
     for(list<MapPoint*>::iterator lit=lLocalMapPoints.begin(), lend=lLocalMapPoints.end(); lit!=lend; lit++)
@@ -880,22 +894,59 @@ void Optimizer::LocalBundleAdjustmentWJ(KeyFrame *pKF, bool* pbStopFlag)
     // Check inlier observations
     for(size_t i=0, iend=vpEdges.size(); i<iend;i++)
     {
-        g2o::EdgeSE3ProjectXYZ* e = vpEdges[i];
+        //Added by wangjing
+    	if(vpEdgeKF[i]!=pKF)
+    	{
+	    	//
+	        g2o::EdgeSE3ProjectXYZ* e = static_cast<g2o::EdgeSE3ProjectXYZ*>(vpEdges[i]);
 
-        if(!e)
-            continue;
+	        if(!e)
+	            continue;
 
-        MapPoint* pMP = vpMapPointEdge[i];
+	        MapPoint* pMP = vpMapPointEdge[i];
 
-        if(pMP->isBad())
-            continue;
+	        if(pMP->isBad())
+	            continue;
 
-        if(e->chi2()>5.991 || !e->isDepthPositive())
-        {
-            KeyFrame* pKF = vpEdgeKF[i];
-            pKF->EraseMapPointMatch(pMP->GetIndexInKeyFrame(pKF));
-            pMP->EraseObservation(pKF);
-        }
+	        if(e->chi2()>5.991 || !e->isDepthPositive())
+	        {
+	            KeyFrame* pKFi = vpEdgeKF[i];
+	            pKFi->EraseMapPointMatch(pMP->GetIndexInKeyFrame(pKFi));
+	            pKFi->EraseObservation(pKFi);
+	        }
+    	}
+		else
+		{
+	    	//
+	        g2o::EdgeSim3ProjectXYZ* e = static_cast<g2o::EdgeSim3ProjectXYZ*>(vpEdges[i]);
+
+	        if(!e)
+	            continue;
+
+	        MapPoint* pMP = vpMapPointEdge[i];
+
+	        if(pMP->isBad())
+	            continue;
+
+			
+			// below is wrong.
+			std::vector<g2o::SparseOptimizer::Vertex*> tmpv = e->vertices();
+			const g2o::VertexSim3Expmap* v1 = static_cast<const g2o::VertexSim3Expmap*>(tmpv[1]);
+			const g2o::VertexSBAPointXYZ* v2 = static_cast<const g2o::VertexSBAPointXYZ*>(tmpv[0]);
+			double tmpdepth = (v1->estimate().map(v2->estimate()))(2);
+			
+
+	        if(e->chi2()>5.991 || tmpdepth<=0)
+	        {
+	            KeyFrame* pKFi = vpEdgeKF[i];
+	            pKFi->EraseMapPointMatch(pMP->GetIndexInKeyFrame(pKFi));
+	            pMP->EraseObservation(pKFi);
+	        }
+
+		
+		
+			
+		}
     }
 
     // Recover optimized data
@@ -903,10 +954,33 @@ void Optimizer::LocalBundleAdjustmentWJ(KeyFrame *pKF, bool* pbStopFlag)
     //Keyframes
     for(list<KeyFrame*>::iterator lit=lLocalKeyFrames.begin(), lend=lLocalKeyFrames.end(); lit!=lend; lit++)
     {
-        KeyFrame* pKF = *lit;
-        g2o::VertexSE3Expmap* vSE3 = static_cast<g2o::VertexSE3Expmap*>(optimizer.vertex(pKF->mnId));
-        g2o::SE3Quat SE3quat = vSE3->estimate();
-        pKF->SetPose(Converter::toCvMat(SE3quat));
+        KeyFrame* pKFi = *lit;
+		//Added by wangjing
+		if(pKFi != pKF)
+		{
+	        g2o::VertexSE3Expmap* vSE3 = static_cast<g2o::VertexSE3Expmap*>(optimizer.vertex(pKFi->mnId));
+	        g2o::SE3Quat SE3quat = vSE3->estimate();
+	        pKFi->SetPose(Converter::toCvMat(SE3quat));
+		}
+		else
+		{
+			g2o::VertexSim3Expmap* vSim3 = static_cast<g2o::VertexSim3Expmap*>(optimizer.vertex(pKFi->mnId));
+
+			g2o::Sim3 CorrectedSiw =  vSim3->estimate();
+//				vCorrectedSwc[nIDi]=CorrectedSiw.inverse();
+			Eigen::Matrix3d eigR = CorrectedSiw.rotation().toRotationMatrix();
+			Eigen::Vector3d eigt = CorrectedSiw.translation();
+			double s = CorrectedSiw.scale();
+
+			printf("scale: %.5f\n",s);
+			
+			eigt *=(1./s); //[R t/s;0 1]
+				
+			cv::Mat Tiw = Converter::toCvSE3(eigR,eigt);
+				
+			pKFi->SetPose(Tiw);
+
+		}
     }
 
     //Points
