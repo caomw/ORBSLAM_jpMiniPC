@@ -451,7 +451,7 @@ void Optimizer::LocalBundleAdjustment(KeyFrame *pKF, bool* pbStopFlag)
     optimizer.optimize(5);
 
 	//Added by wangjing
-	cout<<"local BA, robust SUM_chi2: "<<optimizer.activeRobustChi2()<<endl;
+	cout<<"local BA, robust SUM_chi2: "<<optimizer.activeRobustChi2()/(optimizer.activeEdges()+1e-4)<<endl;
 	//
 
     // Check inlier observations
@@ -500,7 +500,7 @@ void Optimizer::LocalBundleAdjustment(KeyFrame *pKF, bool* pbStopFlag)
 
 
 	//Added by wangjing
-	cout<<"local BA, robust SUM_chi2(all inlier): "<<optimizer.activeRobustChi2()<<endl;
+	cout<<"local BA, robust SUM_chi2(all inlier): "<<optimizer.activeRobustChi2()/(optimizer.activeEdges()+1e-4)<<endl;
 	//
 
 

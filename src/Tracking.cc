@@ -331,10 +331,12 @@ void Tracking::GrabImage(const sensor_msgs::ImageConstPtr& msg)
 		//added by wangjing
 		cv::Mat Rcw=mCurrentFrame.mTcw.rowRange(0,3).colRange(0,3);
 		cv::Mat tcw=mCurrentFrame.mTcw.rowRange(0,3).col(3);
+		cv::Mat Ow=-Rcw.t()*tcw;		//camera center?
 
 		float tmpf=180.0/3.1415926;
 		printf("tcw: %4.2f, %4.2f, %4.2f\n",tcw.at<float>(0),tcw.at<float>(1),tcw.at<float>(2));
 		printf("twc: %4.2f, %4.2f, %4.2f\n",twc.at<float>(0),twc.at<float>(1),twc.at<float>(2));
+		printf("Ow: %4.2f, %4.2f, %4.2f\n",Ow.at<float>(0),Ow.at<float>(1),Ow.at<float>(2));
 		printf("Rcw angle x/y/z: %4.2f, %4.2f, %4.2f\n",
 			-atan2(Rcw.at<float>(1,2),Rcw.at<float>(2,2))*tmpf,
 			  asin(Rcw.at<float>(0,2))*tmpf,
