@@ -824,7 +824,8 @@ void Optimizer::LocalBundleAdjustmentWJ(KeyFrame *pKF, bool* pbStopFlag)
 	        if(pMP->isBad())
 	            continue;
 
-			const g2o::SparseOptimizer::VertexContainer tmpv = e->vertices();
+			// below is wrong.
+			std::vector<g2o::SparseOptimizer::Vertex*> tmpv = e->vertices();
 			const g2o::VertexSim3Expmap* v1 = static_cast<const g2o::VertexSim3Expmap*>(tmpv[1]);
 			const g2o::VertexSBAPointXYZ* v2 = static_cast<const g2o::VertexSBAPointXYZ*>(tmpv[0]);
 			double tmpdepth = (v1->estimate().map(v2->estimate()))(2);
