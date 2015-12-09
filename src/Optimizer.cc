@@ -840,9 +840,19 @@ void Optimizer::LocalBundleAdjustmentWJ(KeyFrame *pKF, bool* pbStopFlag)
 	        }
 		
 		}
+		//
     }
 
     // Recover optimized data
+
+	//To here
+	//To here
+	//To here
+	//To here
+	//To here
+	//To here
+	//To here
+
 
     //Keyframes
     for(list<KeyFrame*>::iterator lit=lLocalKeyFrames.begin(), lend=lLocalKeyFrames.end(); lit!=lend; lit++)
