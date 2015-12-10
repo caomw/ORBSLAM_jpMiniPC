@@ -73,9 +73,9 @@ void LocalMapping::Run()
             { 
 		//Added by wangjing (comment)
                 // Local BA
-//                Optimizer::LocalBundleAdjustment(mpCurrentKeyFrame,&mbAbortBA);
+                Optimizer::LocalBundleAdjustment(mpCurrentKeyFrame,&mbAbortBA);
 		//
-		Optimizer::LocalBundleAdjustmentWJ(mpCurrentKeyFrame,&mbAbortBA);
+//		Optimizer::LocalBundleAdjustmentWJ(mpCurrentKeyFrame,&mbAbortBA);
 
                 // Check redundant local Keyframes
                 KeyFrameCulling();
