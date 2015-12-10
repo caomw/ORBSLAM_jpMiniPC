@@ -17,6 +17,7 @@ pickle-email-*.html
 
 /SI3project/*
 *~
+*.user
 
 KeyFrameTrajectory.txt
 /Data/*
