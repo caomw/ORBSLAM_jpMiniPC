@@ -825,7 +825,7 @@ void Optimizer::LocalBundleAdjustmentWJ(KeyFrame *pKF, bool* pbStopFlag)
 	            continue;
 
 			// below is wrong.
-			std::vector<g2o::SparseOptimizer::Vertex*> tmpv = e->vertices();
+			std::vector<g2o::HyperGraph::Vertex*> tmpv = e->vertices();
 			const g2o::VertexSim3Expmap* v1 = static_cast<const g2o::VertexSim3Expmap*>(tmpv[1]);
 			const g2o::VertexSBAPointXYZ* v2 = static_cast<const g2o::VertexSBAPointXYZ*>(tmpv[0]);
 			double tmpdepth = (v1->estimate().map(v2->estimate()))(2);
@@ -912,7 +912,7 @@ void Optimizer::LocalBundleAdjustmentWJ(KeyFrame *pKF, bool* pbStopFlag)
 	        {
 	            KeyFrame* pKFi = vpEdgeKF[i];
 	            pKFi->EraseMapPointMatch(pMP->GetIndexInKeyFrame(pKFi));
-	            pKFi->EraseObservation(pKFi);
+	            pMP->EraseObservation(pKFi);
 	        }
     	}
 		else
@@ -930,7 +930,7 @@ void Optimizer::LocalBundleAdjustmentWJ(KeyFrame *pKF, bool* pbStopFlag)
 
 			
 			// below is wrong.
-			std::vector<g2o::SparseOptimizer::Vertex*> tmpv = e->vertices();
+			std::vector<g2o::HyperGraph::Vertex*> tmpv = e->vertices();
 			const g2o::VertexSim3Expmap* v1 = static_cast<const g2o::VertexSim3Expmap*>(tmpv[1]);
 			const g2o::VertexSBAPointXYZ* v2 = static_cast<const g2o::VertexSBAPointXYZ*>(tmpv[0]);
 			double tmpdepth = (v1->estimate().map(v2->estimate()))(2);
