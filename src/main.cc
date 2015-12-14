@@ -200,7 +200,31 @@ int main(int argc, char **argv)
         cout<<"first KF is bad"<<endl;
     else
         cout<<"first KF is good"<<endl;
+    for (int i=0;i<vpKFs.size();i++)
+    {
+        KeyFrame* pKFi = vpKFs[i];
+        std::vector<float> tmpScaleFactors = pKFi->GetScaleFactors();
+        std::vector<float> tmpScaleLevelSigma2 = pKFi->GetVectorScaleSigma2();
+        std::cout<<pKFi->mnId<<"\tscale factor: ";
+        for(int j=0;j<tmpScaleFactors.size();j++)
+        {
+            std::cout<<tmpScaleFactors[j]<<" ";
+        }
+        std::cout<<endl;
 
+
+        std::cout<<pKFi->mnId<<"\tlevel sigma2: ";
+        for(int j=0;j<tmpScaleLevelSigma2.size();j++)
+        {
+            std::cout<<tmpScaleLevelSigma2[j]<<" ";
+        }
+        std::cout<<endl;
+
+        std::cout<<pKFi->mnId<<"\tnNextId: "<<pKFi->nNextId<<endl;
+        std::cout<<pKFi->mnId<<"\tmfGridElementWidthInv: "<<pKFi->mfGridElementWidthInv<<endl;
+        std::cout<<pKFi->mnId<<"\tmfGridElementHeightInv: "<<pKFi->mfGridElementHeightInv<<endl;
+        std::cout<<pKFi->mnId<<"\tfx/fy/cx/cy: "<<pKFi->fx<<" "<<pKFi->fy<<" "<<pKFi->cx<<" "<<pKFi->cy<<endl;
+    }
 
     cout << endl << "Saving KeyFrameDatabase" << endl;
     strFile = ros::package::getPath("ORB_SLAM")+"/tmp/"+"KeyFrameDatabase.txt";
