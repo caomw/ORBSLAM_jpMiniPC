@@ -71,11 +71,8 @@ void LocalMapping::Run()
 
             if(!CheckNewKeyFrames() && !stopRequested())
             { 
-		//Added by wangjing (comment)
                 // Local BA
                 Optimizer::LocalBundleAdjustment(mpCurrentKeyFrame,&mbAbortBA);
-		//
-//		Optimizer::LocalBundleAdjustmentWJ(mpCurrentKeyFrame,&mbAbortBA);
 
                 // Check redundant local Keyframes
                 KeyFrameCulling();

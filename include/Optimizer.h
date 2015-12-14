@@ -52,7 +52,7 @@ public:
 
 	//Added by wangjing
     void static LocalBundleAdjustmentWJ(KeyFrame* pKF, bool *pbStopFlag=NULL);
-	//
+    void static LocalBundleAdjustmentWJ_All7Dof(KeyFrame* pKF, bool *pbStopFlag=NULL);
 };
 
 } //namespace ORB_SLAM
