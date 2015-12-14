@@ -189,6 +189,50 @@ int main(int argc, char **argv)
     }
     f.close();
 
+	//Added by wangjing
+	using namespace ORB_SLAM;
+    cout << endl << "Saving KeyFrameDatabase" << endl;
+    strFile = ros::package::getPath("ORB_SLAM")+"/tmp/"+"KeyFrameDatabase.txt";
+    f.open(strFile.c_str());
+    f << fixed;
+//	const std::vector<list<KeyFrame*>> * pvlkfDB = &Database.mvInvertedFile;
+//	int kfDBsize = pvlkfDB->size();
+	int tmpIdx = 0;
+	for(std::vector<list<KeyFrame*>>::iterator vit=Database.mvInvertedFile.begin(), vend=mConnectedKeyFrameWeights.end(); vit!=vend; vit++, tmpIdx++)
+	{
+		if(vit==Database.mvInvertedFile.begin() || vit==(Database.mvInvertedFile.begin()+1))
+			cout<<tmpIdx<<endl;
+	
+		list<KeyFrame*>* plKF = *vit;
+		int listsize = plKF->size();
+		if(listsize > 0)	//only save the word seen in KeyFrames.
+		{
+			f << tmpIdx << " " << listsize << " ";	//save wordID,  and number of KFs see this word
+			for(list<KeyFrame*>::iterator lit=plKF->begin(), lend=plKF->end(); lit!=lend; lit++)
+			{
+				KeyFrame* pKFi = *lit;
+				f << pKFi->mnId <<" ";				//save ID of KFs see the word
+			}
+			f << endl;
+		}
+	}
+	f.close();
+
+
+//       vPairs.push_back(make_pair(mit->second,mit->first));
+//	for(size_t i=0; i<kfDBsize; i++)			//loop for the vector
+//	{
+//		int listsize = (*pvlkfDB)[i].size();	//size of vector[i], i.e. list<keyframe*>
+//		if(listsize > 0)
+//		{
+//			f << (*pvlkfDB)[i].;	//save wordID
+//			for(size_t j=0; j<listsize; j++)
+//		}
+//	}
+
+	
+	
+
     ros::shutdown();
 
 	return 0;
