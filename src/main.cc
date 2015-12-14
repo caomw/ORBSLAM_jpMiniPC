@@ -194,6 +194,13 @@ int main(int argc, char **argv)
 
     //for test
     cout<<"max KF id: "<<World.GetMaxKFid()<<endl;
+    cout<<"min KF id: "<<vpKFs[0]->mnId<<endl;
+    cout<<"KF number: "<<World.KeyFramesInMap()<<endl;
+    if(vpKFs[0]->isBad())
+        cout<<"first KF is bad"<<endl;
+    else
+        cout<<"first KF is good"<<endl;
+
 
     cout << endl << "Saving KeyFrameDatabase" << endl;
     strFile = ros::package::getPath("ORB_SLAM")+"/tmp/"+"KeyFrameDatabase.txt";
