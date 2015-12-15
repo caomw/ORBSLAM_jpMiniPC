@@ -74,6 +74,21 @@ public:
     float GetMinDistanceInvariance();
     float GetMaxDistanceInvariance();
 
+	//Added by wangjing. 
+	//Can only be used when read data from files during initialization
+	
+	
+	//change from protected to public
+	// Tracking counters
+	int GetmnVisible(){return mnVisible};
+	int GetmnFound(){return mnFound};
+	void SetmnVisible(int nvis){mnVisible = nvis};
+	void SetmnFound(int nfd){mnFound = nfd};
+	void SetNormalVec(cv::Mat nv){nv.copyTo(mNormalVector);};
+	void SetDescriptor(cv::Mat des){des.copyTo(mDescriptor);};
+    void SetMinDistance(float mindis){mfMinDistance = mindis};
+    void SetMaxDistance(float maxdis){mfMaxDistance = maxdis};
+
 public:
     long unsigned int mnId;
     static long unsigned int nNextId;
@@ -97,12 +112,6 @@ public:
     long unsigned int mnCorrectedByKF;
     long unsigned int mnCorrectedReference;
 
-//change from protected to public
-// Tracking counters
-int mnVisible;
-int mnFound;
-
-
 protected:    
 
      // Position in absolute coordinates
@@ -120,9 +129,9 @@ protected:
      // Reference KeyFrame
      KeyFrame* mpRefKF;
 
-//     // Tracking counters
-//     int mnVisible;
-//     int mnFound;
+     // Tracking counters
+     int mnVisible;
+     int mnFound;
 
      // Bad flag (we do not currently erase MapPoint from memory)
      bool mbBad;

@@ -38,6 +38,8 @@
 
 #include "Converter.h"
 
+//Added by wangjing
+#include "SaveLoadWorld.h"
 
 using namespace std;
 
@@ -112,6 +114,19 @@ int main(int argc, char **argv)
 
     //Create the map
     ORB_SLAM::Map World;
+
+
+	//Added by wangjing
+	MapMPIndexPointer mpIdxPtMap;
+	loadMPVariables(&Database, &World, &mpIdxPtMap);
+	
+	MapKFIndexPointer kfIdxPtMap;
+	loadKFVariables(&Database, &World, &kfIdxPtMap);
+	
+//	//to be added of mappoints
+//	tmpMP.mObservations;
+//	tmpMP.mpRefKF;
+
 
     FramePub.SetMap(&World);
 
@@ -315,8 +330,8 @@ int main(int argc, char **argv)
 //                cout<<"cout descriptor: "<<tdes<<endl;
 //                printflag = false;
 //            }
-			fmpVar << pMPi->mnVisible <<" ";
-			fmpVar << pMPi->mnFound <<" ";
+			fmpVar << pMPi->GetmnVisible() <<" ";
+			fmpVar << pMPi->GetmnFound() <<" ";
 			fmpVar << pMPi->GetMinDistanceInvariance() <<" ";
 			fmpVar << pMPi->GetMaxDistanceInvariance() <<" ";
 			fmpVar << pMPi->GetReferenceKeyFrame()->mnId <<" ";
