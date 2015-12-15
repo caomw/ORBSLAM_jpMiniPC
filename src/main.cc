@@ -264,7 +264,8 @@ int main(int argc, char **argv)
     fmpObs << fixed;
 	
 	int tmpIdx=0;
-	for(std::set<MapPoint*>::iterator sit=World.mspMapPoints.begin(), send=World.mspMapPoints.end(); sit!=send; sit++, tmpIdx++)
+    vector<MapPoint*> vMapPoints = World.GetAllMapPoints();
+    for(std::vector<MapPoint*>::iterator sit=vMapPoints.begin(), send=vMapPoints.end(); sit!=send; sit++, tmpIdx++)
 	{
 		MapPoint* pMPi = *sit;
 		if(!pMPi->isBad())	//only save those not bad
@@ -294,7 +295,7 @@ int main(int argc, char **argv)
 			fmpVar << tnv.at<float>(0) <<" "<< tnv.at<float>(1) <<" "<< tnv.at<float>(2) <<" ";
 			cv::Mat tdes = pMPi->GetDescriptor();	//256b, 8*uint32_t
 			const uint32_t *tpdes = tdes.ptr<uint32_t>();
-			for(ti=0; ti<8; ti++)
+            for(int ti=0; ti<8; ti++)
 			{
 				fmpVar << tpdes[ti] <<" ";
 			}
@@ -306,9 +307,10 @@ int main(int argc, char **argv)
 			fmpVar << std::endl;
 
 			// save observations
-			int nObs = pMPi->mObservations().size();
+            map<KeyFrame*,size_t> observations = pMPi->GetObservations();
+            int nObs = observations.size();
 			fmpObs << nObs << " ";	//total number 
-			for(std::map<KeyFrame*, size_t>::iterator mit=pMPi->mObservations().begin(), mend=pMPi->mObservations().end(); mit!=mend; mit++)
+            for(std::map<KeyFrame*, size_t>::iterator mit=observations.begin(), mend=observations.end(); mit!=mend; mit++)
 			{
 				KeyFrame* pKFm = mit->first;
 				size_t idMPinKF = mit->second;
