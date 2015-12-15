@@ -97,6 +97,12 @@ public:
     long unsigned int mnCorrectedByKF;
     long unsigned int mnCorrectedReference;
 
+//change from protected to public
+// Tracking counters
+int mnVisible;
+int mnFound;
+
+
 protected:    
 
      // Position in absolute coordinates
@@ -114,9 +120,9 @@ protected:
      // Reference KeyFrame
      KeyFrame* mpRefKF;
 
-     // Tracking counters
-     int mnVisible;
-     int mnFound;
+//     // Tracking counters
+//     int mnVisible;
+//     int mnFound;
 
      // Bad flag (we do not currently erase MapPoint from memory)
      bool mbBad;

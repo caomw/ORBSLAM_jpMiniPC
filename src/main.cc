@@ -226,12 +226,11 @@ int main(int argc, char **argv)
         std::cout<<pKFi->mnId<<"\tfx/fy/cx/cy: "<<pKFi->fx<<" "<<pKFi->fy<<" "<<pKFi->cx<<" "<<pKFi->cy<<endl;
     }
 
+	{
     cout << endl << "Saving KeyFrameDatabase" << endl;
     strFile = ros::package::getPath("ORB_SLAM")+"/tmp/"+"KeyFrameDatabase.txt";
     f.open(strFile.c_str());
     f << fixed;
-//	const std::vector<list<KeyFrame*>> * pvlkfDB = &Database.mvInvertedFile;
-//	int kfDBsize = pvlkfDB->size();
 	int tmpIdx = 0;
 	for(std::vector<list<KeyFrame*> >::iterator vit=Database.mvInvertedFile.begin(), vend=Database.mvInvertedFile.end(); vit!=vend; vit++, tmpIdx++)
 	{
@@ -252,19 +251,77 @@ int main(int argc, char **argv)
 		}
 	}
 	f.close();
+	}
 
+	{
+	ofstream fmpVar,fmpObs;
+	cout << endl << "Saving MapPoint" << endl;
+    strFile = ros::package::getPath("ORB_SLAM")+"/tmp/"+"mpVariables.txt";
+    fmpVar.open(strFile.c_str());
+    fmpVar << fixed;
+    strFile = ros::package::getPath("ORB_SLAM")+"/tmp/"+"mpObservations.txt";
+    fmpObs.open(strFile.c_str());
+    fmpObs << fixed;
+	
+	int tmpIdx=0;
+	for(std::set<MapPoint*>::iterator sit=World.mspMapPoints.begin(), send=World.mspMapPoints.end(); sit!=send; sit++, tmpIdx++)
+	{
+		MapPoint* pMPi = *sit;
+		if(!pMPi->isBad())	//only save those not bad
+		{
+			// save plain variable
+			// public, 15
+			fmpVar << pMPi->nNextId << " ";
+			fmpVar << pMPi->mnId << " ";
+			fmpVar << pMPi->mnFirstKFid << " ";
+			fmpVar << pMPi->mTrackProjX << " ";
+			fmpVar << pMPi->mTrackProjY << " ";
+			fmpVar << pMPi->mbTrackInView << " ";
+			fmpVar << pMPi->mnTrackScaleLevel << " ";
+			fmpVar << pMPi->mTrackViewCos << " ";
+			fmpVar << pMPi->mnTrackReferenceForFrame << " ";
+			fmpVar << pMPi->mnLastFrameSeen << " ";
+			fmpVar << pMPi->mnBALocalForKF << " ";
+			fmpVar << pMPi->mnFuseCandidateForKF << " ";
+			fmpVar << pMPi->mnLoopPointForKF << " ";
+			fmpVar << pMPi->mnCorrectedByKF << " ";
+			fmpVar << pMPi->mnCorrectedReference << " ";
+			// protected
+			fmpVar << setprecision(7);
+			cv::Mat twp = pMPi->GetWorldPos();
+			fmpVar << twp.at<float>(0) <<" "<< twp.at<float>(1) <<" "<< twp.at<float>(2) <<" ";
+			cv::Mat tnv = pMPi->GetNormal();
+			fmpVar << tnv.at<float>(0) <<" "<< tnv.at<float>(1) <<" "<< tnv.at<float>(2) <<" ";
+			cv::Mat tdes = pMPi->GetDescriptor();	//256b, 8*uint32_t
+			const uint32_t *tpdes = tdes.ptr<uint32_t>();
+			for(ti=0; ti<8; ti++)
+			{
+				fmpVar << tpdes[ti] <<" ";
+			}
+			fmpVar << pMPi->mnVisible <<" ";
+			fmpVar << pMPi->mnFound <<" ";
+			fmpVar << pMPi->GetMinDistanceInvariance() <<" ";
+			fmpVar << pMPi->GetMaxDistanceInvariance() <<" ";
+			fmpVar << pMPi->GetReferenceKeyFrame()->mnId <<" ";
+			fmpVar << std::endl;
 
-//       vPairs.push_back(make_pair(mit->second,mit->first));
-//	for(size_t i=0; i<kfDBsize; i++)			//loop for the vector
-//	{
-//		int listsize = (*pvlkfDB)[i].size();	//size of vector[i], i.e. list<keyframe*>
-//		if(listsize > 0)
-//		{
-//			f << (*pvlkfDB)[i].;	//save wordID
-//			for(size_t j=0; j<listsize; j++)
-//		}
-//	}
+			// save observations
+			int nObs = pMPi->mObservations().size();
+			fmpObs << nObs << " ";	//total number 
+			for(std::map<KeyFrame*, size_t>::iterator mit=pMPi->mObservations().begin(), mend=pMPi->mObservations().end(); mit!=mend; mit++)
+			{
+				KeyFrame* pKFm = mit->first;
+				size_t idMPinKF = mit->second;
+				fmpObs << pKFm->mnId << " " << idMPinKF << " ";	//KF id and MP index in KF
+			}
 
+			fmpObs << std::endl;
+		}
+	}
+
+	fmpVar.close();
+	fmpObs.close();
+	}
 	
 	
 
