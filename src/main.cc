@@ -265,7 +265,7 @@ int main(int argc, char **argv)
 	
 	int tmpIdx=0;
     vector<MapPoint*> vMapPoints = World.GetAllMapPoints();
-    bool printflag=true;
+//    bool printflag=true;
     for(std::vector<MapPoint*>::iterator sit=vMapPoints.begin(), send=vMapPoints.end(); sit!=send; sit++, tmpIdx++)
 	{
 		MapPoint* pMPi = *sit;
@@ -300,17 +300,17 @@ int main(int argc, char **argv)
 			{
 				fmpVar << tpdes[ti] <<" ";
 			}
-            if(printflag)
-            {
-                const unsigned char *tp = tdes.ptr();
-                for(int ti=0;ti<32;ti++)
-                    cout<<(int)tp[ti]<<" ";
-                cout<<endl;
-                cout<<"cout worldpos: "<<twp<<endl;
-                cout<<"normal vector: "<<tnv<<endl;
-                cout<<"cout descriptor: "<<tdes<<endl;
-                printflag = false;
-            }
+//            if(printflag)
+//            {
+//                const unsigned char *tp = tdes.ptr();
+//                for(int ti=0;ti<32;ti++)
+//                    cout<<(int)tp[ti]<<" ";
+//                cout<<endl;
+//                cout<<"cout worldpos: "<<twp<<endl;
+//                cout<<"normal vector: "<<tnv<<endl;
+//                cout<<"cout descriptor: "<<tdes<<endl;
+//                printflag = false;
+//            }
 			fmpVar << pMPi->mnVisible <<" ";
 			fmpVar << pMPi->mnFound <<" ";
 			fmpVar << pMPi->GetMinDistanceInvariance() <<" ";
