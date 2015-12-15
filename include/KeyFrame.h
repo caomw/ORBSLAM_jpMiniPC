@@ -137,11 +137,13 @@ public:
 
 	//Added by wangjing
 	vector<int> GetMinMaxXY(void)	{	return vector<int>({mnMinX,mnMinY,mnMaxX,mnMaxY});	}
-	void SetMinMaxXY(int ix,int iy,int ax,int ay){mnMinX=ix;mnMinY=iy;mnMaxX=ax;mnMaxY=ay};
-	void SetmK(cv::Mat _mk){_mk.copyTo(mK);}
-	void SetScaleParams(int _mnScaleLevels,vector<float> _mvScaleFactors,vector<float> _mvLevelSigma2,vector<float> _mvInvLevelSigma2){
-	mnScaleLevels=_mnScaleLevels;	mvScaleFactors=_mvScaleFactors;
-	mvLevelSigma2=_mvLevelSigma2;	mvInvLevelSigma2=_mvInvLevelSigma2;	}
+	void SetKeyPoints(vector<cv::KeyPoint> vkps) {mvKeys = vkps};
+	void SetKeyPointsUn(vector<cv::KeyPoint> vkpsun) {mvKeysUn = vkpsun};
+//	void SetMinMaxXY(int ix,int iy,int ax,int ay){mnMinX=ix;mnMinY=iy;mnMaxX=ax;mnMaxY=ay};
+//	void SetmK(cv::Mat _mk){_mk.copyTo(mK);}
+//	void SetScaleParams(int _mnScaleLevels,vector<float> _mvScaleFactors,vector<float> _mvLevelSigma2,vector<float> _mvInvLevelSigma2){
+//	mnScaleLevels=_mnScaleLevels;	mvScaleFactors=_mvScaleFactors;
+//	mvLevelSigma2=_mvLevelSigma2;	mvInvLevelSigma2=_mvInvLevelSigma2;	}
 		
 public:
     static long unsigned int nNextId;
