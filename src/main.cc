@@ -266,12 +266,12 @@ int main(int argc, char **argv)
 	int tmpIdx=0;
     vector<MapPoint*> vMapPoints = World.GetAllMapPoints();
 //    bool printflag=true;
-    for(std::vector<MapPoint*>::iterator sit=vMapPoints.begin(), send=vMapPoints.end(); sit!=send; sit++, tmpIdx++)
+    for(std::vector<MapPoint*>::iterator vit=vMapPoints.begin(), vend=vMapPoints.end(); vit!=vend; vit++, tmpIdx++)
 	{
-		MapPoint* pMPi = *sit;
+		MapPoint* pMPi = *vit;
 		if(!pMPi->isBad())	//only save those not bad
 		{
-			// save plain variable
+			// 1. save plain variable
 			// public, 15
 			fmpVar << pMPi->nNextId << " ";
 			fmpVar << pMPi->mnId << " ";
@@ -318,7 +318,7 @@ int main(int argc, char **argv)
 			fmpVar << pMPi->GetReferenceKeyFrame()->mnId <<" ";
 			fmpVar << std::endl;
 
-			// save observations
+			// 2. save observations
             map<KeyFrame*,size_t> observations = pMPi->GetObservations();
             int nObs = observations.size();
 			fmpObs << nObs << " ";	//total number 
@@ -336,7 +336,162 @@ int main(int argc, char **argv)
 	fmpVar.close();
 	fmpObs.close();
 	}
+
+
+	{
+	ofstream fkfVar,fkfKeys,fkfKeysUn,fkfDes,fkfMPids;
+	cout << endl << "Saving MapPoint" << endl;
+    strFile = ros::package::getPath("ORB_SLAM")+"/tmp/"+"kfVariables.txt";
+    fkfVar.open(strFile.c_str());
+    fkfVar << fixed;
 	
+    strFile = ros::package::getPath("ORB_SLAM")+"/tmp/"+"kfKeyPoints.txt";
+    fkfKeys.open(strFile.c_str());
+    fkfKeys << fixed;
+    strFile = ros::package::getPath("ORB_SLAM")+"/tmp/"+"kfKeyPointsUn.txt";
+    fkfKeysUn.open(strFile.c_str());
+    fkfKeysUn << fixed;
+	
+    strFile = ros::package::getPath("ORB_SLAM")+"/tmp/"+"kfDescriptors.txt";
+    fkfDes.open(strFile.c_str());
+    fkfDes << fixed;
+
+    strFile = ros::package::getPath("ORB_SLAM")+"/tmp/"+"kfMapPointsID.txt";
+    fkfMPids.open(strFile.c_str());
+    fkfMPids << fixed;
+	
+	fkfVar << setprecision(7);
+	fkfKeys << setprecision(7);
+	fkfKeysUn << setprecision(7);
+	fkfDes << setprecision(7);
+	fkfMPids<< setprecision(7);
+
+	int tmpIdx=0;
+    vector<KeyFrame*> vKeyFrames = World.GetAllKeyFrames();
+    bool printflag=true;
+    for(std::vector<KeyFrame*>::iterator vit=vKeyFrames.begin(), vend=vKeyFrames.end(); vit!=vend; vit++, tmpIdx++)
+	{
+		KeyFrame* pKFi = *vit;
+		if(!pKFi->isBad())
+		{
+			//1. save plain variables
+			// public
+			fkfVar << pKFi->nNextId <<" ";
+			fkfVar << pKFi->mnId <<" ";
+			fkfVar << pKFi->mnFrameId <<" ";
+			fkfVar << pKFi->mTimeStamp <<" ";
+			fkfVar << pKFi->mnTrackReferenceForFrame <<" ";
+			fkfVar << pKFi->mnFuseTargetForKF <<" ";
+			fkfVar << pKFi->mnBALocalForKF <<" ";
+			fkfVar << pKFi->mnBAFixedForKF <<" ";
+			fkfVar << pKFi->mnLoopQuery <<" ";
+			fkfVar << pKFi->mnLoopWords <<" ";
+			fkfVar << pKFi->mLoopScore <<" ";
+			fkfVar << pKFi->mnRelocQuery <<" ";
+			fkfVar << pKFi->mnRelocWords <<" ";
+			fkfVar << pKFi->mRelocScore <<" ";
+			// protected
+			fkfVar << setprecision(10);
+			cv::Mat Rcwi=pKFi->GetRotation();
+			for(int ti=0;ti<3;ti++)
+			{
+				for(int tj=0;tj<3;tj++)
+				{
+					fkfVar << Rcwi.at<float>(ti,tj) <<" ";
+				}
+			}
+			fkfVar << setprecision(7);
+			cv::Mat tcwi = pKFi->GetTranslation();
+			for(int ti=0;ti<3;ti++)
+			{
+				fkfVar << tcwi.at<float>(ti) <<" ";
+			}
+			cv::Mat Owi = pKFi->GetCameraCenter();
+			for(int ti=0;ti<3;ti++)
+			{
+				fkfVar << Owi.at<float>(ti) <<" ";
+			}
+			fkfVar << endl;
+
+			// 2. save KeyPoints and KeyPointsUn
+			vector<cv::KeyPoint> mvKeysi = pKFi->GetKeyPoints();
+			fkfKeys << mvKeysi.size() <<" ";
+			for(vector<cv::KeyPoint>::iterator vitkeys=mvKeysi.begin(), vendkeys=mvKeysi.end(); vitkeys!=vendkeys; vitkeys++)
+			{
+				cv::KeyPoint kpi = *vitkeys;
+				fkfKeys << kpi.pt.x <<" "<< kpi.pt.y <<" "<< kpi.size <<" "<< kpi.angle <<" ";
+				fkfKeys << kpi.response << " " << kpi.octave << " " << kpi.class_id <<" ";
+			}
+			fkfKeys <<endl;
+			
+			vector<cv::KeyPoint> mvKeysiUn = pKFi->GetKeyPointsUn();
+			fkfKeysUn << mvKeysiUn.size() <<" ";
+			for(vector<cv::KeyPoint>::iterator vitkeysun=fkfKeysUn.begin(), vendkeysun=mvKeysi.end(); vitkeysun!=vendkeysun; vitkeysun++)
+			{
+				cv::KeyPoint kpi = *vitkeysun;
+				fkfKeysUn << kpi.pt.x <<" "<< kpi.pt.y <<" "<< kpi.size <<" "<< kpi.angle <<" ";
+				fkfKeysUn << kpi.response << " " << kpi.octave << " " << kpi.class_id <<" ";
+			}
+			fkfKeysUn <<endl;
+
+			// 3. save descriptors
+			cv::Mat descriptorsi = pKFi->GetDescriptors();
+			int desnumi = descriptorsi.rows;
+			fkfDes << desnumi <<" ";	//number of descriptors
+			for(int ti=0;ti<desnumi;ti++)
+			{
+				cv::Mat tdes = descriptorsi.row(ti);
+				const uint32_t *tpdes = tdes.ptr<uint32_t>();
+	            for(int tj=0; tj<8; tj++)
+				{
+					fkfDes << tpdes[tj] <<" ";
+				}
+			}
+			fkfDes <<endl;
+
+			// 4. save mappoint id
+			set<MapPoint*> mpsi = pKFi->GetMapPoints();		//not GetMapPointMatches()!
+			fkfMPids << mpsi.size() <<" ";	//number of mappoints
+			for(set<MapPoint*>::iterator sit=mpsi.begin(), send=mpsi.end(); sit!=send; sit++)
+			{
+				MapPoint* tmp = *sit;
+				fkfMPids << tmp.mnId <<" ";
+			}
+			fkfMPids <<endl;
+			
+			if(printflag)
+			{
+				for(int ti=0;ti<3;ti++)
+				{
+					for(int tj=0;tj<3;tj++)					
+						cout << Rcwi.at<float>(ti,tj) <<" ";
+					cout<<endl;
+				}
+				for(int ti=0;ti<3;ti++)
+					cout<<tcwi.at<float><<" ";
+				cout<<endl;
+				cout<<"Pose Tcw: "<<pKFi->GetPose();
+
+                const unsigned char *tp = descriptorsi.row(0).ptr();
+                for(int ti=0;ti<32;ti++)
+                    cout<<(int)tp[ti]<<" ";
+                cout<<endl;
+				cout<<"descriptor0/0: "<<descriptorsi.row(0)<<endl;
+				
+				printflag=false;
+			}
+			
+		}
+		
+    }
+	
+	fkfVar.close();
+	fkfKeys.close();
+	fkfKeysUn.close();
+	fkfDes.close();
+	fkfMPids.close();
+
+	}
 	
 
     ros::shutdown();
