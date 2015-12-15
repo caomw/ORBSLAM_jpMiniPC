@@ -200,13 +200,13 @@ int main(int argc, char **argv)
         cout<<"first KF is bad"<<endl;
     else
         cout<<"first KF is good"<<endl;
-    for (int i=0;i<vpKFs.size();i++)
+    for (size_t i=0;i<vpKFs.size();i++)
     {
         KeyFrame* pKFi = vpKFs[i];
         std::vector<float> tmpScaleFactors = pKFi->GetScaleFactors();
         std::vector<float> tmpScaleLevelSigma2 = pKFi->GetVectorScaleSigma2();
         std::cout<<pKFi->mnId<<"\tscale factor: ";
-        for(int j=0;j<tmpScaleFactors.size();j++)
+        for(size_t j=0;j<tmpScaleFactors.size();j++)
         {
             std::cout<<tmpScaleFactors[j]<<" ";
         }
@@ -214,7 +214,7 @@ int main(int argc, char **argv)
 
 
         std::cout<<pKFi->mnId<<"\tlevel sigma2: ";
-        for(int j=0;j<tmpScaleLevelSigma2.size();j++)
+        for(size_t j=0;j<tmpScaleLevelSigma2.size();j++)
         {
             std::cout<<tmpScaleLevelSigma2[j]<<" ";
         }
@@ -253,6 +253,9 @@ int main(int argc, char **argv)
 	f.close();
 	}
 
+    /*
+    save mappoint files
+    */
 	{
 	ofstream fmpVar,fmpObs;
 	cout << endl << "Saving MapPoint" << endl;
@@ -289,9 +292,10 @@ int main(int argc, char **argv)
 			fmpVar << pMPi->mnCorrectedByKF << " ";
 			fmpVar << pMPi->mnCorrectedReference << " ";
 			// protected
-			fmpVar << setprecision(7);
-			cv::Mat twp = pMPi->GetWorldPos();
+            fmpVar << setprecision(10);
+            cv::Mat twp = pMPi->GetWorldPos();
 			fmpVar << twp.at<float>(0) <<" "<< twp.at<float>(1) <<" "<< twp.at<float>(2) <<" ";
+            fmpVar << setprecision(7);
 			cv::Mat tnv = pMPi->GetNormal();
 			fmpVar << tnv.at<float>(0) <<" "<< tnv.at<float>(1) <<" "<< tnv.at<float>(2) <<" ";
 			cv::Mat tdes = pMPi->GetDescriptor();	//256b, 8*uint32_t
@@ -338,9 +342,12 @@ int main(int argc, char **argv)
 	}
 
 
+    /*
+    save keyframe files
+    */
 	{
 	ofstream fkfVar,fkfKeys,fkfKeysUn,fkfDes,fkfMPids;
-	cout << endl << "Saving MapPoint" << endl;
+    cout << endl << "Saving KeyFrames" << endl;
     strFile = ros::package::getPath("ORB_SLAM")+"/tmp/"+"kfVariables.txt";
     fkfVar.open(strFile.c_str());
     fkfVar << fixed;
@@ -369,13 +376,14 @@ int main(int argc, char **argv)
 	int tmpIdx=0;
     vector<KeyFrame*> vKeyFrames = World.GetAllKeyFrames();
     bool printflag=true;
-    for(std::vector<KeyFrame*>::iterator vit=vKeyFrames.begin(), vend=vKeyFrames.end(); vit!=vend; vit++, tmpIdx++)
+    for(std::vector<KeyFrame*>::iterator vitKFs=vKeyFrames.begin(), vendKFs=vKeyFrames.end(); vitKFs!=vendKFs; vitKFs++, tmpIdx++)
 	{
-		KeyFrame* pKFi = *vit;
+        KeyFrame* pKFi = *vitKFs;
 		if(!pKFi->isBad())
 		{
 			//1. save plain variables
 			// public
+            fkfVar << setprecision(7);
 			fkfVar << pKFi->nNextId <<" ";
 			fkfVar << pKFi->mnId <<" ";
 			fkfVar << pKFi->mnFrameId <<" ";
@@ -399,8 +407,7 @@ int main(int argc, char **argv)
 				{
 					fkfVar << Rcwi.at<float>(ti,tj) <<" ";
 				}
-			}
-			fkfVar << setprecision(7);
+            }
 			cv::Mat tcwi = pKFi->GetTranslation();
 			for(int ti=0;ti<3;ti++)
 			{
@@ -410,12 +417,13 @@ int main(int argc, char **argv)
 			for(int ti=0;ti<3;ti++)
 			{
 				fkfVar << Owi.at<float>(ti) <<" ";
-			}
+            }
 			fkfVar << endl;
 
 			// 2. save KeyPoints and KeyPointsUn
 			vector<cv::KeyPoint> mvKeysi = pKFi->GetKeyPoints();
 			fkfKeys << mvKeysi.size() <<" ";
+
 			for(vector<cv::KeyPoint>::iterator vitkeys=mvKeysi.begin(), vendkeys=mvKeysi.end(); vitkeys!=vendkeys; vitkeys++)
 			{
 				cv::KeyPoint kpi = *vitkeys;
@@ -426,7 +434,7 @@ int main(int argc, char **argv)
 			
 			vector<cv::KeyPoint> mvKeysiUn = pKFi->GetKeyPointsUn();
 			fkfKeysUn << mvKeysiUn.size() <<" ";
-			for(vector<cv::KeyPoint>::iterator vitkeysun=fkfKeysUn.begin(), vendkeysun=mvKeysi.end(); vitkeysun!=vendkeysun; vitkeysun++)
+            for(vector<cv::KeyPoint>::iterator vitkeysun=mvKeysiUn.begin(), vendkeysun=mvKeysiUn.end(); vitkeysun!=vendkeysun; vitkeysun++)
 			{
 				cv::KeyPoint kpi = *vitkeysun;
 				fkfKeysUn << kpi.pt.x <<" "<< kpi.pt.y <<" "<< kpi.size <<" "<< kpi.angle <<" ";
@@ -455,12 +463,13 @@ int main(int argc, char **argv)
 			for(set<MapPoint*>::iterator sit=mpsi.begin(), send=mpsi.end(); sit!=send; sit++)
 			{
 				MapPoint* tmp = *sit;
-				fkfMPids << tmp.mnId <<" ";
+                fkfMPids << tmp->mnId <<" ";
 			}
 			fkfMPids <<endl;
 			
-			if(printflag)
+            if(printflag && tmpIdx==4)
 			{
+                cout<<"print for test"<<endl;
 				for(int ti=0;ti<3;ti++)
 				{
 					for(int tj=0;tj<3;tj++)					
@@ -468,9 +477,9 @@ int main(int argc, char **argv)
 					cout<<endl;
 				}
 				for(int ti=0;ti<3;ti++)
-					cout<<tcwi.at<float><<" ";
+                    cout<<tcwi.at<float>(ti)<<" ";
 				cout<<endl;
-				cout<<"Pose Tcw: "<<pKFi->GetPose();
+                cout<<"Pose Tcw: "<<pKFi->GetPose()<<endl;
 
                 const unsigned char *tp = descriptorsi.row(0).ptr();
                 for(int ti=0;ti<32;ti++)
