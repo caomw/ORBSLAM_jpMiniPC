@@ -225,11 +225,39 @@ bool loadKFVariables(KeyFrameDatabase *db, Map *wd, MapKFIndexPointer *kfIdxPtMa
 	unsigned long int nNextId;
 	
 	Frame tmpFrame;
+	Frame::fx = fx;
+	Frame::fy = fy;
+	Frame::cx = cx;
+	Frame::cy = cy;
+	Frame::mfGridElementWidthInv = mfGridElementWidthInv;
+	Frame::mfGridElementHeightInv = mfGridElementHeightInv;
+	Frame::mnMinX = mnMinX;
+	Frame::mnMinY = mnMinY;
+	Frame::mnMaxX = mnMaxX;
+	Frame::mnMaxY = mnMaxY;
+	cv::Mat K = cv::Mat::eye(3,3,CV_32F);
+    K.at<float>(0,0) = fx;
+    K.at<float>(1,1) = fy;
+    K.at<float>(0,2) = cx;
+    K.at<float>(1,2) = cy;
+    K.copyTo(tmpFrame.mK);
+	tmpFrame.mpORBvocabulary = db->mpVoc;
+	tmpFrame.mnScaleLevels = mnScaleLevelsOther;
+	tmpFrame.mvScaleFactors = mvScaleFactorsOther;
+	tmpFrame.mvLevelSigma2 = mvLevelSigma2Other;
+	tmpFrame.mvInvLevelSigma2 = mvInvLevelSigma2Other;
+	
+
+	Frame tmpFrame0(tmpFrame);
+	tmpFrame0.mnScaleLevels = mnScaleLevels0;
+	tmpFrame0.mvScaleFactors = mvScaleFactors0;
+	tmpFrame0.mvLevelSigma2 = mvLevelSigma20;
+	tmpFrame0.mvInvLevelSigma2 = mvInvLevelSigma20;
 	
 	unsigned long int linecnt=0;
 	while(!ifkfVar.eof())
 	{
-		KeyFrame* tmpKF = new KeyFrame(tmpFrame, wd, db);
+	
 	
 		string slVar,slKeys,slKeysUn,slDes,slMPids;
 		stringstream ssVar,ssKeys,ssKeysUn,ssDes,ssMPids;
@@ -259,6 +287,13 @@ bool loadKFVariables(KeyFrameDatabase *db, Map *wd, MapKFIndexPointer *kfIdxPtMa
 			ssVar >> tcwi.at<float>(ti);			}
 		for(int ti=0;ti<3;ti++)		{
 			ssVar >> Owi.at<float>(ti);				}
+
+
+		if(mnId>=0 && mnId<=1)
+			KeyFrame* tmpKF = new KeyFrame(tmpFrame0, wd, db);	
+		else
+			KeyFrame* tmpKF = new KeyFrame(tmpFrame, wd, db);
+
 
 		//evaluate 
 		KeyFrame::nNextId = nNextId;
@@ -317,25 +352,28 @@ bool loadKFVariables(KeyFrameDatabase *db, Map *wd, MapKFIndexPointer *kfIdxPtMa
 		
 		getline(ifkfKeys,slKeys);
 		ssKeys << slKeys;
+//		std::vector<cv::KeyPoint> mvKeys;
+
 		getline(ifkfKeysUn,slKeysUn);
 		ssKeysUn << slKeysUn;
+//		std::vector<cv::KeyPoint> mvKeysUn;
+
 		getline(ifkfDes,slDes);
 		ssDes << slDes;
+//		cv::Mat mDescriptors;
+
 		getline(ifkfMPids,slMPids);
 		ssMPids << slMPids;
 
 		
 
 		//to be added
-//		cv::Mat im;
 //		DBoW2::BowVector mBowVec;
-//		std::vector<cv::KeyPoint> mvKeys;
-//		std::vector<cv::KeyPoint> mvKeysUn;
-//		cv::Mat mDescriptors;
-//		std::vector<MapPoint*> mvpMapPoints;
-//		KeyFrameDatabase* mpKeyFrameDB;
-//		ORBVocabulary* mpORBvocabulary;
 //		DBoW2::FeatureVector mFeatVec;
+
+
+//		std::vector<MapPoint*> mvpMapPoints;
+//		ORBVocabulary* mpORBvocabulary;
 //		std::map<KeyFrame*,int> mConnectedKeyFrameWeights;
 //		std::vector<KeyFrame*> mvpOrderedConnectedKeyFrames;
 //		std::vector<int> mvOrderedWeights;
@@ -343,7 +381,12 @@ bool loadKFVariables(KeyFrameDatabase *db, Map *wd, MapKFIndexPointer *kfIdxPtMa
 //		KeyFrame* mpParent;
 //		std::set<KeyFrame*> mspChildrens;
 //		std::set<KeyFrame*> mspLoopEdges;
+
+		
+//		KeyFrameDatabase* mpKeyFrameDB;
 //    	Map* mpMap;
+
+//		cv::Mat im;
 
 	}
 
