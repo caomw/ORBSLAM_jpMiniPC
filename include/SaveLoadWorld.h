@@ -57,7 +57,7 @@ void loadMPVariables(KeyFrameDatabase *db, Map *wd, MapMPIndexPointer *mpIdxPtMa
 	unsigned long int nNextId;
 
 	Frame tmpFrame;
-	KeyFrame tmpKF(tmpFrame, &wd, &db);
+    KeyFrame * tmpKF = new KeyFrame(tmpFrame, wd, db);
 
 
 	unsigned long int linecnt=0;
@@ -103,7 +103,7 @@ void loadMPVariables(KeyFrameDatabase *db, Map *wd, MapMPIndexPointer *mpIdxPtMa
 		}
 		ss >> mnVisible >> mnFound >> mfMinDistance >> mfMaxDistance >> mpRefKFId;
 
-		MapPoint* tmpMP = new MapPoint(mWorldPos, &tmpKF, &wd);
+        MapPoint* tmpMP = new MapPoint(mWorldPos, tmpKF, wd);
 		//static
 		MapPoint::nNextId = nNextId;
 		//public
@@ -126,7 +126,7 @@ void loadMPVariables(KeyFrameDatabase *db, Map *wd, MapMPIndexPointer *mpIdxPtMa
 		tmpMP->SetNormalVec(mNormalVector);
 		tmpMP->SetDescriptor(mDescriptor);
 		tmpMP->SetmnVisible(mnVisible);
-		tmpMP->setmnFound(mnFound);
+        tmpMP->SetmnFound(mnFound);
 		tmpMP->SetMinDistance(mfMaxDistance);
 		tmpMP->SetMaxDistance(mfMaxDistance);
 
@@ -143,6 +143,8 @@ void loadMPVariables(KeyFrameDatabase *db, Map *wd, MapMPIndexPointer *mpIdxPtMa
 		// increment count
 		linecnt++;
 	}
+
+    delete tmpKF;
 }
 
 

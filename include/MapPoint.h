@@ -80,14 +80,14 @@ public:
 	
 	//change from protected to public
 	// Tracking counters
-	int GetmnVisible(){return mnVisible};
-	int GetmnFound(){return mnFound};
-	void SetmnVisible(int nvis){mnVisible = nvis};
-	void SetmnFound(int nfd){mnFound = nfd};
+    int GetmnVisible(){return mnVisible;};
+    int GetmnFound(){return mnFound;};
+    void SetmnVisible(int nvis){mnVisible = nvis;};
+    void SetmnFound(int nfd){mnFound = nfd;};
 	void SetNormalVec(cv::Mat nv){nv.copyTo(mNormalVector);};
 	void SetDescriptor(cv::Mat des){des.copyTo(mDescriptor);};
-    void SetMinDistance(float mindis){mfMinDistance = mindis};
-    void SetMaxDistance(float maxdis){mfMaxDistance = maxdis};
+    void SetMinDistance(float mindis){mfMinDistance = mindis;};
+    void SetMaxDistance(float maxdis){mfMaxDistance = maxdis;};
 
 public:
     long unsigned int mnId;
