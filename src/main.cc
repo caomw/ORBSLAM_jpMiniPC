@@ -117,12 +117,37 @@ int main(int argc, char **argv)
 
 
 	//Added by wangjing
+	bool bReadOK=true;
+
 	MapMPIndexPointer mpIdxPtMap;
-	loadMPVariables(&Database, &World, &mpIdxPtMap);
+	if(bReadOK)
+	bReadOK = loadMPVariables(&Database, &World, &mpIdxPtMap);
 	
 	MapKFIndexPointer kfIdxPtMap;
-	loadKFVariables(&Database, &World, &kfIdxPtMap);
+	if(bReadOK)
+	bReadOK = loadKFVariables(&Database, &World, &kfIdxPtMap);
 	
+//	bReadOK = loadKFDatabase(&Database);
+
+	if(bReadOK)
+	{
+		cout<<"load world file successfully."<<endl;
+		// operations
+		
+//	//to be added of mappoints
+//	tmpMP.mObservations;
+//	tmpMP.mpRefKF;
+
+	}
+	else
+	{
+		cout<<"load world file failed."<<endl;
+		// operations
+		World->clear();
+		Database->clear();
+		// to delete mpIdxPtMap and kfIdxPtMap
+	}
+
 //	//to be added of mappoints
 //	tmpMP.mObservations;
 //	tmpMP.mpRefKF;
@@ -220,7 +245,7 @@ int main(int argc, char **argv)
         KeyFrame* pKFi = vpKFs[i];
         std::vector<float> tmpScaleFactors = pKFi->GetScaleFactors();
         std::vector<float> tmpScaleLevelSigma2 = pKFi->GetVectorScaleSigma2();
-        std::cout<<pKFi->mnId<<"\tscale factor: ";
+        std::cout<<pKFi->mnId<<"\t"<<pKFi->GetScaleLevels()<<"\tscale factor: ";
         for(size_t j=0;j<tmpScaleFactors.size();j++)
         {
             std::cout<<tmpScaleFactors[j]<<" ";
@@ -241,6 +266,67 @@ int main(int argc, char **argv)
         std::cout<<pKFi->mnId<<"\tfx/fy/cx/cy: "<<pKFi->fx<<" "<<pKFi->fy<<" "<<pKFi->cx<<" "<<pKFi->cy<<endl;
     }
 
+	//------------------------------------------------
+	//save global parameters
+	{
+	cout<<endl<<"Saving global params"<<endl;
+	strFile = ros::package::getPath("ORB_SLAM")+"/tmp/"+"GlobalParams.txt";
+	f.open(strFile.c_str());
+	f<<fixed;
+	f<<setprecision(10);
+	
+	//MapPoint data
+	//Line0. MP.nNextID
+	f<<MapPoint::nNextId<<endl;
+	
+	//KeyFrame data
+	vector<KeyFrame*> vpKFt = World.GetAllKeyFrames();
+	KeyFrame* pKF0 = vpKFt[0];
+	//Line1.  KF.nNextID, mfGridElementWidthInv, mfGridElementHeightInv,fx/fy/cx/cy,
+	//(cont.) mnMinX,mnMinY,mnMaxX,mnMaxY,mK
+	f<<KeyFrame::nNextId<<" ";
+	f<<pKF0->mfGridElementWidthInv<<" "<<pKF0->mfGridElementHeightInv<<" ";
+	f<<pKF0->fx<<" "<<pKF0->fy<<" "<<pKF0->cx<<" "<<pKF0->cy<<" ";
+	vector<int> tv=pKF0->GetMinMaxXY();
+	f<<tv[0]<<" "<<tv[1]<<" "<<tv[2]<<" "<<tv[3]<<" ";
+	
+	f<<endl;
+	//Line2. mnScaleLevels(N), N*mvScaleFactors, N*mvLevelSigma2 for the first 2 KFs. 
+	f<<pKF0->GetScaleLevels()<<" ";
+	vector<float> sfactors =  pKF0->GetScaleFactors();
+	for(int i=0;i<sfactors.size();i++)
+		f<<sfactors[i]<<" ";
+	vector<float> lsigma2 = pKF0->GetVectorScaleSigma2();	//mvInvLevelSigma2 is 1/mvLevelSigma2
+	for(int i=0;i<lsigma2.size();i++)
+		f<<lsigma2[i]<<" ";
+	f<<endl; 
+	//Line3. mnScaleLevels(N), N*mvScaleFactors, N*mvLevelSigma2 for other KFs. 
+	KeyFrame* pKFg;
+	for(vector<KeyFrame*>::iterator kfit=vpKFt.begin(), kfend=vpKFt.end(); kfit!=kfend; kfit++)
+	{
+		pKFg=*kfit;
+		if(pKFg->mnId>2 && pKFg && !pKFg.isBad())
+			break;
+	}
+	f<<pKFg->GetScaleLevels()<<" ";
+	vector<float> sfactors =  pKFg->GetScaleFactors();
+	for(int i=0;i<sfactors.size();i++)
+		f<<sfactors[i]<<" ";
+	vector<float> lsigma2 = pKFg->GetVectorScaleSigma2();	//mvInvLevelSigma2 is 1/mvLevelSigma2
+	for(int i=0;i<lsigma2.size();i++)
+		f<<lsigma2[i]<<" ";
+	f<<endl;
+
+	//other data
+
+	//f<<endl;
+	
+	f.close();
+	}
+
+
+	//------------------------------------------------
+	//save keyframe database
 	{
     cout << endl << "Saving KeyFrameDatabase" << endl;
     strFile = ros::package::getPath("ORB_SLAM")+"/tmp/"+"KeyFrameDatabase.txt";
@@ -268,6 +354,7 @@ int main(int argc, char **argv)
 	f.close();
 	}
 
+	//------------------------------------------------
     /*
     save mappoint files
     */
@@ -357,7 +444,9 @@ int main(int argc, char **argv)
 	}
 
 
-    /*
+ 
+	//------------------------------------------------
+	/*
     save keyframe files
     */
 	{
@@ -404,11 +493,13 @@ int main(int argc, char **argv)
 			fkfVar << pKFi->mnFrameId <<" ";
 			fkfVar << pKFi->mTimeStamp <<" ";
 			fkfVar << pKFi->mnTrackReferenceForFrame <<" ";
+			
 			fkfVar << pKFi->mnFuseTargetForKF <<" ";
 			fkfVar << pKFi->mnBALocalForKF <<" ";
 			fkfVar << pKFi->mnBAFixedForKF <<" ";
 			fkfVar << pKFi->mnLoopQuery <<" ";
 			fkfVar << pKFi->mnLoopWords <<" ";
+			
 			fkfVar << pKFi->mLoopScore <<" ";
 			fkfVar << pKFi->mnRelocQuery <<" ";
 			fkfVar << pKFi->mnRelocWords <<" ";
