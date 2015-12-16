@@ -287,6 +287,9 @@ bool loadKFVariables(KeyFrameDatabase *db, Map *wd, ORBVocabulary* mpvoc,
 
 	// create a temperary Frame, for global or static params of KeyFrames
 	Frame tmpFrame;
+
+	Frame::nNextId = gnNextIdKF+1;	//id of Frame should be larger than KF's id
+	
 	Frame::fx = fx;
 	Frame::fy = fy;
 	Frame::cx = cx;
