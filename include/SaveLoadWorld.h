@@ -682,7 +682,7 @@ void SaveWorldToFile( Map& World, KeyFrameDatabase& Database)
 	int tmpIdx = 0;
     for(std::vector<list<KeyFrame*> >::iterator vit=Database.mvInvertedFile.begin(), vend=Database.mvInvertedFile.end(); vit!=vend; vit++, tmpIdx++)
 	{
-		if(vit==Database.mvInvertedFile.begin() || vit==(Database.mvInvertedFile.begin()+1))
+		//if(vit==Database.mvInvertedFile.begin() || vit==(Database.mvInvertedFile.begin()+1))
 			cout<<tmpIdx<<endl;
 	
 		list<KeyFrame*> plKF = *vit;
