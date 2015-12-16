@@ -117,38 +117,23 @@ int main(int argc, char **argv)
 
 
 //	//Added by wangjing
-//	bool bReadOK=true;
+	bool bReadOK = LoadWroldFromFile(&Database, &World, &Vocabulary);
 
-//	MapMPIndexPointer mpIdxPtMap;
-//	if(bReadOK)
-//	bReadOK = loadMPVariables(&Database, &World, &mpIdxPtMap);
-//	
-//	MapKFIndexPointer kfIdxPtMap;
-//	if(bReadOK)
-//	bReadOK = loadKFVariables(&Database, &World, &kfIdxPtMap);
-//	
-
-//	if(bReadOK)
-//	{
-//		cout<<"load world file successfully."<<endl;
-//		// operations
-//		
-//	//	//to be added of mappoints
-//	//	tmpMP.mObservations;
-//	//	tmpMP.mpRefKF;
-
-//	//	//to be added of keyframes
-//	//	std::vector<MapPoint*> mvpMapPoints; (HAVING vector<vector<long unsigned int> > vMPIdInKF)
-
-//	}
-//	else
-//	{
-//		cout<<"load world file failed."<<endl;
-//		// operations
-//		World->clear();
-//		Database->clear();
-//		// to delete mpIdxPtMap and kfIdxPtMap
-//	}
+	if(bReadOK)
+	{
+		cout<<"load world file successfully."<<endl;
+		// operations
+		////////////////////////
+		// set tracking status -> LOST
+	}
+	else
+	{
+		cout<<"load world file failed."<<endl;
+		// operations
+		World->clear();
+		Database->clear();
+		
+	}
 
 
 

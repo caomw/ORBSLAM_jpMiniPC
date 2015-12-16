@@ -136,9 +136,11 @@ public:
     float ComputeSceneMedianDepth(int q = 2);
 
 	//Added by wangjing
-	vector<int> GetMinMaxXY(void)	{	return vector<int>({mnMinX,mnMinY,mnMaxX,mnMaxY});	}
-	void SetKeyPoints(vector<cv::KeyPoint> vkps) {mvKeys = vkps};
-	void SetKeyPointsUn(vector<cv::KeyPoint> vkpsun) {mvKeysUn = vkpsun};
+	vector<int> GetMinMaxXY(void)	{	
+		int tv[4]={mnMinX,mnMinY,mnMaxX,mnMaxY};
+		return vector<int>(tv);	}
+	void SetKeyPoints(vector<cv::KeyPoint> vkps) {mvKeys = vkps;};
+	void SetKeyPointsUn(vector<cv::KeyPoint> vkpsun) {mvKeysUn = vkpsun;};
 	void SetDescriptors(cv::Mat des)	{mDescriptors = des.clone();};
 	void SetmvpMapPoints(vector<MapPoint*> _vmps) {mvpMapPoints = _vmps;};
 //	void SetMinMaxXY(int ix,int iy,int ax,int ay){mnMinX=ix;mnMinY=iy;mnMaxX=ax;mnMaxY=ay};

@@ -31,8 +31,8 @@ bool loadMPVariables(KeyFrameDatabase *db, Map *wd, MapMPIndexPointer *mpIdxPtMa
 		VecUL &_VecMPmnId, VecUL &_vRefKFIdInMP);
 
 // load KeyFrame data
-bool loadKFVariables(KeyFrameDatabase *db, Map *wd, MapKFIndexPointer *kfIdxPtMap,
-		VecUL &_VecKFmnId);
+bool loadKFVariables(KeyFrameDatabase *db, Map *wd, ORBVocabulary* mpvoc,
+	MapKFIndexPointer *kfIdxPtMap, VecUL &_VecKFmnId);
 
 // load voc-keyframe invert index, after keyframe data is loaded
 bool loadKFDatabase(KeyFrameDatabase *db);
@@ -40,6 +40,10 @@ bool loadKFDatabase(KeyFrameDatabase *db);
 // associate pointers in MPs and KFs
 void loadMPKFPointers(MapMPIndexPointer *mpIdxPtMap, MapKFIndexPointer *kfIdxPtMap, 
 		const VecUL &vRefKFIdInMP);
+
+
+// load all data. main function
+bool LoadWroldFromFile(KeyFrameDatabase *db, Map *wd, ORBVocabulary* mpvoc);
 
 
 // --------------------------------------------------
@@ -92,8 +96,6 @@ bool loadMPVariables(KeyFrameDatabase *db, Map *wd, MapMPIndexPointer *mpIdxPtMa
 	unsigned long int linecnt=0;
 	while(!ifs.eof())
 	{
-		// new MapPoint memory space and pointer
-        MapPoint* tmpMP = new MapPoint(mWorldPos, tmpKF, wd);
 		
 		string sl;
 		stringstream ss;
@@ -134,6 +136,11 @@ bool loadMPVariables(KeyFrameDatabase *db, Map *wd, MapMPIndexPointer *mpIdxPtMa
 			tpdes[i] = tmpi;
 		}
 		ss >> mnVisible >> mnFound >> mfMinDistance >> mfMaxDistance >> mpRefKFId;
+
+
+		// new MapPoint memory space and pointer
+        MapPoint* tmpMP = new MapPoint(mWorldPos, tmpKF, wd);
+
 
 		//static
 		MapPoint::nNextId = nNextId;
@@ -200,8 +207,8 @@ bool loadMPVariables(KeyFrameDatabase *db, Map *wd, MapMPIndexPointer *mpIdxPtMa
 	return true;
 }
 
-bool loadKFVariables(KeyFrameDatabase *db, Map *wd, MapKFIndexPointer *kfIdxPtMap, 
-		VecUL &_VecKFmnId)
+bool loadKFVariables(KeyFrameDatabase *db, Map *wd, ORBVocabulary* mpvoc,
+	MapKFIndexPointer *kfIdxPtMap, VecUL &_VecKFmnId)
 {
 	ifstream ifkfVar,ifkfKeys,ifkfKeysUn,ifkfDes,ifGlobal;
 	if(	!myOpenFile(ifkfVar,	string(ros::package::getPath("ORB_SLAM")+"/tmp/"+"kfVariables.txt")) 	||
@@ -276,7 +283,7 @@ bool loadKFVariables(KeyFrameDatabase *db, Map *wd, MapKFIndexPointer *kfIdxPtMa
 
 	unsigned long int nNextId;
 
-	// set a temperary Frame, for global or static params of KeyFrames
+	// create a temperary Frame, for global or static params of KeyFrames
 	Frame tmpFrame;
 	Frame::fx = fx;
 	Frame::fy = fy;
@@ -294,7 +301,7 @@ bool loadKFVariables(KeyFrameDatabase *db, Map *wd, MapKFIndexPointer *kfIdxPtMa
     K.at<float>(0,2) = cx;
     K.at<float>(1,2) = cy;
     K.copyTo(tmpFrame.mK);
-	tmpFrame.mpORBvocabulary = db->mpVoc;
+	tmpFrame.mpORBvocabulary = mpvoc;
 	tmpFrame.mnScaleLevels = mnScaleLevelsOther;
 	tmpFrame.mvScaleFactors = mvScaleFactorsOther;
 	tmpFrame.mvLevelSigma2 = mvLevelSigma2Other;
@@ -343,10 +350,11 @@ bool loadKFVariables(KeyFrameDatabase *db, Map *wd, MapKFIndexPointer *kfIdxPtMa
 
 
 		//new keyframe from tmp frame
+		KeyFrame* tmpKF;
 		if(mnId>=0 && mnId<=1)
-			KeyFrame* tmpKF = new KeyFrame(tmpFrame0, wd, db);	
+			tmpKF = new KeyFrame(tmpFrame0, wd, db);	
 		else
-			KeyFrame* tmpKF = new KeyFrame(tmpFrame, wd, db);
+			tmpKF = new KeyFrame(tmpFrame, wd, db);
 
 		//evaluate 
 		KeyFrame::nNextId = nNextId;
@@ -636,6 +644,18 @@ void SaveWorldToFile(const Map& World)
 	long unsigned int mpSaveCnt,kfSaveCnt;
 	mpSaveCnt=0;
 	kfSaveCnt=0;
+
+//	//------------------------------------------------
+//	//save world data
+//	{
+//	ofstream fwd;
+//	cout << endl << "Saving World data" << endl;
+//	strFile = ros::package::getPath("ORB_SLAM")+"/tmp/"+"WorldData.txt";
+//	fwd.open(strFile.c_str());
+//	fwd<<fixed;
+//	fwd<<World.mnMaxKFid<<World.mbMapUpdated<<endl;
+//	
+//	}
 	
 	//------------------------------------------------
 	//save keyframe database
@@ -1022,26 +1042,40 @@ void SaveWorldToFile(const Map& World)
 }
 
 
-bool LoadWroldFromFile(KeyFrameDatabase *db, Map *wd)
+bool LoadWroldFromFile(KeyFrameDatabase *db, Map *wd, ORBVocabulary* mpvoc)
 {
 	MapMPIndexPointer mpIdxPtMap;
 	MapKFIndexPointer kfIdxPtMap;
 	VecUL vRefKFIdInMP;
 	VecUL vKFmnId,vMPmnId;
+	bool ret,ret1,ret2,ret3,ret4;
 
 	//step 1. load and create all mappoints
-	loadMPVariables(db,wd,&mpIdxPtMap,vMPmnId,vRefKFIdInMP);
+	ret1=loadMPVariables(db,wd,&mpIdxPtMap,vMPmnId,vRefKFIdInMP);
 
 	//step 2. load and craete all keyframes
-	loadKFVariables(db,wd,&kfIdxPtMap,vKFmnId);
+	ret2=loadKFVariables(db,wd,mpvoc,&kfIdxPtMap,vKFmnId);
 
 	//step 3. associate pointers in MPs and KFs
-	loadMPKFPointers(mpIdxPtMap, kfIdxPtMap, vRefKFIdInMP);
+	ret3=loadMPKFPointers(mpIdxPtMap, kfIdxPtMap, vRefKFIdInMP);
 
 	//step 4. associate pointers in invertfile of vocabulary
-	loadKFDatabase(db);
+	ret4=loadKFDatabase(db);
 
-	return true;
+	//step 5. world
+	if(ret1&&ret2&&ret3&&ret4)
+	{
+		for(MapKFIndexPointer::iterator mit=kfIdxPtMap.begin(), mend=kfIdxPtMap.end(); mit!=mend; mit++)
+		{
+			wd->AddKeyFrame(mit->second);
+		}
+		for(MapMPIndexPointer::iterator mit=mpIdxPtMap.begin(), mend=mpIdxPtMap.end(); mit!=mend; mit++)
+		{
+			wd->AddMapPoint(mit->second);
+		}
+	}	
+
+	return (ret1&&ret2&&ret3&&ret4);
 }
 
 
