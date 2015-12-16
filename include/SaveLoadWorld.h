@@ -27,19 +27,19 @@ typedef map<long unsigned int, KeyFrame*> MapKFIndexPointer;
 typedef vector<long unsigned int> VecUL;
 
 // load MapPoint data
-bool loadMPVariables(KeyFrameDatabase *db, Map *wd, MapMPIndexPointer *mpIdxPtMap, 
-		VecUL &_VecMPmnId, VecUL &_vRefKFIdInMP);
+bool loadMPVariables(KeyFrameDatabase *db, Map *wd, MapMPIndexPointer *mpIdxPtMap,
+                     VecUL &_VecMPmnId, VecUL &_vRefKFIdInMP);
 
 // load KeyFrame data
 bool loadKFVariables(KeyFrameDatabase *db, Map *wd, ORBVocabulary* mpvoc,
-	MapKFIndexPointer *kfIdxPtMap, VecUL &_VecKFmnId);
+                     MapKFIndexPointer *kfIdxPtMap, VecUL &_VecKFmnId);
 
 // load voc-keyframe invert index, after keyframe data is loaded
 bool loadKFDatabase(KeyFrameDatabase *db);
 
 // associate pointers in MPs and KFs
-void loadMPKFPointers(MapMPIndexPointer *mpIdxPtMap, MapKFIndexPointer *kfIdxPtMap, 
-		const VecUL &vRefKFIdInMP);
+bool loadMPKFPointers(MapMPIndexPointer &mpIdxPtMap, MapKFIndexPointer &kfIdxPtMap,
+                      const VecUL& VecKFmnId, const VecUL& VecMPmnId, const VecUL &vRefKFIdInMP);
 
 
 // load all data. main function
@@ -222,7 +222,7 @@ bool loadKFVariables(KeyFrameDatabase *db, Map *wd, ORBVocabulary* mpvoc,
 
 	//save mappoint id in each KF
 	long unsigned int kfSaveCnt,mpSaveCnt;
-	vector<VecUL > VecKFmnId;
+    VecUL VecKFmnId;
 
 	long unsigned int gnNextIdKF,gnNExtIdMP;
 	float mfGridElementWidthInv, mfGridElementHeightInv, fx, fy, cx, cy;
@@ -351,7 +351,7 @@ bool loadKFVariables(KeyFrameDatabase *db, Map *wd, ORBVocabulary* mpvoc,
 
 		//new keyframe from tmp frame
 		KeyFrame* tmpKF;
-		if(mnId>=0 && mnId<=1)
+        if(mnId<=1) //mnId>=0 &&  always >=0
 			tmpKF = new KeyFrame(tmpFrame0, wd, db);	
 		else
 			tmpKF = new KeyFrame(tmpFrame, wd, db);
@@ -419,10 +419,10 @@ bool loadKFVariables(KeyFrameDatabase *db, Map *wd, ORBVocabulary* mpvoc,
 		ssDes << slDes;
 		size_t ndes;
 		ssDes >> ndes;
-		cv::Mat matDes = cv::Mat::zeros(ndes,32,cv::CV_8U);
-		for(int ti=0;ti<ndes;ti++)
+        cv::Mat matDes = cv::Mat::zeros(ndes,32,CV_8U);
+        for(size_t ti=0;ti<ndes;ti++)
 		{
-			cv::Mat tmpDes = cv::Mat::zeros(1,32,cv::CV_8U);
+            cv::Mat tmpDes = cv::Mat::zeros(1,32,CV_8U);
 			uint32_t *pdes = tmpDes.ptr<uint32_t>();
 			for(int i=0;i<8;i++)
 			{
@@ -492,7 +492,7 @@ bool loadKFVariables(KeyFrameDatabase *db, Map *wd, ORBVocabulary* mpvoc,
 }
 
 
-void loadMPKFPointers(const MapMPIndexPointer &mpIdxPtMap, const MapKFIndexPointer &kfIdxPtMap,
+bool loadMPKFPointers(MapMPIndexPointer &mpIdxPtMap, MapKFIndexPointer &kfIdxPtMap,
 		const VecUL& VecKFmnId, const VecUL& VecMPmnId, const VecUL &vRefKFIdInMP)
 {
 	ifstream ifkfMPids,ifkfLPEGs,ifGlobal,ifmpObs;
@@ -516,14 +516,15 @@ void loadMPKFPointers(const MapMPIndexPointer &mpIdxPtMap, const MapKFIndexPoint
 
 	//------------------------------
 	//1 MapPoint pointers
-	if(VecMPmnId.size()!=mpSaveCnt || vRefKFIdInMP.size()!=mpSaveCnt || MapMPIndexPointer.size()!=mpSaveCnt)
+    if(VecMPmnId.size()!=mpSaveCnt || vRefKFIdInMP.size()!=mpSaveCnt || mpIdxPtMap.size()!=mpSaveCnt)
 		cerr<<"VecMPmnId.size()!=mpSaveCnt || vRefKFIdInMP.size()!=mpSaveCnt || MapMPIndexPointer.size()!=mpSaveCnt, shouldn't"<<endl;
 	// MapPoint mnId , line order in file
 	for(size_t i=0;i<mpSaveCnt;i++)
 	{
 		long unsigned int tMPmnid = VecMPmnId[i];	
 		MapPoint* pMP = mpIdxPtMap[tMPmnid];	//MapPoint pointer of mnId
-		pMP->SetRefKFPointer(vRefKFIdInMP[i]);	//set mpRefKF
+        KeyFrame* pkFref = kfIdxPtMap[vRefKFIdInMP[i]];    //Keyframe pointer to ReferenceKF
+        pMP->SetRefKFPointer(pkFref);	//set mpRefKF
 		//	tmpMP.mpRefKF;
 
 		// observation data
@@ -537,7 +538,7 @@ void loadMPKFPointers(const MapMPIndexPointer &mpIdxPtMap, const MapKFIndexPoint
 			long unsigned int kfIdj; size_t obIdj;	//mnId of KF see this MP, and id of observation
 			ssObs>>kfIdj>>obIdj;
 			KeyFrame* pKF = kfIdxPtMap[kfIdj];	//KF
-			pMP->AddObservation(pKF,obIdj)		//add observation
+            pMP->AddObservation(pKF,obIdj);		//add observation
 		}
 		//tmpMP.mObservations;
 	}
@@ -563,7 +564,7 @@ void loadMPKFPointers(const MapMPIndexPointer &mpIdxPtMap, const MapKFIndexPoint
 		if(kfmnId!=kfmnIdread)	cerr<<"mpid: kfmnId!=VecKFmnId[linecnt], shouldn't"<<endl;
 		if(nMPid==0) 	cerr<<"line " << linecnt<<" nMPid=0. shouldn't"<<endl;
 		//KeyPoint number, size of mvpMapPoints
-		size_t kpN = pKF->mvKeys.size();
+        size_t kpN = pKF->GetKeyPoints().size();
 		vector<MapPoint*> mvpMPs = vector<MapPoint*>(kpN,static_cast<MapPoint*>(NULL));
 		pKF->SetmvpMapPoints(mvpMPs);	//init mvpMapPoint as NULL (size = KeyPoints.size())
 		//for each KeyFrame, set 
@@ -572,7 +573,7 @@ void loadMPKFPointers(const MapMPIndexPointer &mpIdxPtMap, const MapKFIndexPoint
 			ssMPids>>tmpid>>tvpMPidx;
 			MapPoint* pMP = mpIdxPtMap[tmpid];
 			pKF->AddMapPoint(pMP,tvpMPidx);
-			if(tvpMPidx!=pMP->GetIndexInKeyFrame(pKF))	
+            if((int)tvpMPidx!=pMP->GetIndexInKeyFrame(pKF))
 				cerr<<tvpMPidx<<" "<<pMP->GetIndexInKeyFrame(pKF)<<"\ntvpMPidx!=pMP->GetIndexInKeyFrame(pKF), shouldn't"<<endl;
 			if(ssMPids.fail())	cerr<<"ssMPids fail. shouldn't"<<endl;
 		}
@@ -619,6 +620,8 @@ void loadMPKFPointers(const MapMPIndexPointer &mpIdxPtMap, const MapKFIndexPoint
 	ifkfLPEGs.close();
 	ifmpObs.close();
 	ifGlobal.close();
+
+    return true;
 }
 
 bool loadKFDatabase(KeyFrameDatabase *db)
@@ -638,7 +641,7 @@ bool loadKFDatabase(KeyFrameDatabase *db)
 }
 
 
-void SaveWorldToFile(const Map& World)
+void SaveWorldToFile( Map& World, KeyFrameDatabase& Database)
 {
 	string strFile;
 	long unsigned int mpSaveCnt,kfSaveCnt;
@@ -666,7 +669,7 @@ void SaveWorldToFile(const Map& World)
 	f.open(strFile.c_str());
 	f << fixed;
 	int tmpIdx = 0;
-	for(std::vector<list<KeyFrame*> >::iterator vit=Database.mvInvertedFile.begin(), vend=Database.mvInvertedFile.end(); vit!=vend; vit++, tmpIdx++)
+    for(std::vector<list<KeyFrame*> >::iterator vit=Database.mvInvertedFile.begin(), vend=Database.mvInvertedFile.end(); vit!=vend; vit++, tmpIdx++)
 	{
 		if(vit==Database.mvInvertedFile.begin() || vit==(Database.mvInvertedFile.begin()+1))
 			cout<<tmpIdx<<endl;
@@ -701,10 +704,10 @@ void SaveWorldToFile(const Map& World)
 	fmpObs.open(strFile.c_str());
 	fmpObs << fixed;
 	
-	int tmpIdx=0;
-	vector<MapPoint*> vMapPoints = World.GetAllMapPoints();
+    long unsigned int tmpIdx=0;
+    vector<MapPoint*> vMapPoints = World.GetAllMapPoints();
 //	  bool printflag=true;
-	for(std::vector<MapPoint*>::iterator vit=vMapPoints.begin(), vend=vMapPoints.end(); vit!=vend; vit++, tmpIdx++)
+    for(std::vector<MapPoint*>::iterator vit=vMapPoints.begin(), vend=vMapPoints.end(); vit!=vend; vit++, tmpIdx++)
 	{
 		MapPoint* pMPi = *vit;
 		if(!pMPi->isBad())	//only save those not bad
@@ -822,7 +825,7 @@ void SaveWorldToFile(const Map& World)
 	fkfDes << setprecision(7);
 	fkfMPids << setprecision(7);
 
-	int tmpIdx=0;
+    long unsigned int tmpIdx=0;
 	vector<KeyFrame*> vKeyFrames = World.GetAllKeyFrames();
 	bool printflag=true;
 	for(std::vector<KeyFrame*>::iterator vitKFs=vKeyFrames.begin(), vendKFs=vKeyFrames.end(); vitKFs!=vendKFs; vitKFs++, tmpIdx++)
@@ -930,9 +933,10 @@ void SaveWorldToFile(const Map& World)
 			fkfLPEGs << pKFi->mnId << " "<<nlpegs<<" ";
 			if(nlpegs>0)
 			{
-				for(set<KeyFrame*> sit=lpedges.begin(), send=lpedges.end(); sit!=send; sit++)
+                for(set<KeyFrame*>::iterator sit=lpedges.begin(), send=lpedges.end(); sit!=send; sit++)
 				{
-					fkfLPEGs << sit->mnId <<" ";
+                    KeyFrame* tpKFlpeg=(*sit);
+                    fkfLPEGs << tpKFlpeg->mnId <<" ";
 				}
 			}
 			fkfLPEGs <<endl;
@@ -1009,27 +1013,29 @@ void SaveWorldToFile(const Map& World)
 	//Line2. mnScaleLevels(N), N*mvScaleFactors, N*mvLevelSigma2 for the first 2 KFs. 
 	f<<pKF0->GetScaleLevels()<<" ";
 	vector<float> sfactors =  pKF0->GetScaleFactors();
-	for(int i=0;i<sfactors.size();i++)
+    for(size_t i=0;i<sfactors.size();i++)
 		f<<sfactors[i]<<" ";
 	vector<float> lsigma2 = pKF0->GetVectorScaleSigma2();	//mvInvLevelSigma2 is 1/mvLevelSigma2
-	for(int i=0;i<lsigma2.size();i++)
+    for(size_t i=0;i<lsigma2.size();i++)
 		f<<lsigma2[i]<<" ";
 	f<<endl; 
 	//Line3. mnScaleLevels(N), N*mvScaleFactors, N*mvLevelSigma2 for other KFs. 
-	KeyFrame* pKFg;
+    KeyFrame* pKFg=static_cast<KeyFrame*>(NULL);
 	for(vector<KeyFrame*>::iterator kfit=vpKFt.begin(), kfend=vpKFt.end(); kfit!=kfend; kfit++)
 	{
 		pKFg=*kfit;
-		if(pKFg->mnId>2 && pKFg && !pKFg.isBad())
-			break;
+        if(pKFg)
+            if(pKFg->mnId>2 && !pKFg->isBad())
+                break;
 	}
+    if(!pKFg) cerr<<"pKFg=NULL, shouldn't"<<endl;
 	f<<pKFg->GetScaleLevels()<<" ";
-	vector<float> sfactors =  pKFg->GetScaleFactors();
-	for(int i=0;i<sfactors.size();i++)
-		f<<sfactors[i]<<" ";
-	vector<float> lsigma2 = pKFg->GetVectorScaleSigma2();	//mvInvLevelSigma2 is 1/mvLevelSigma2
-	for(int i=0;i<lsigma2.size();i++)
-		f<<lsigma2[i]<<" ";
+    vector<float> sfactorsg =  pKFg->GetScaleFactors();
+    for(size_t i=0;i<sfactorsg.size();i++)
+        f<<sfactorsg[i]<<" ";
+    vector<float> lsigma2g = pKFg->GetVectorScaleSigma2();	//mvInvLevelSigma2 is 1/mvLevelSigma2
+    for(size_t i=0;i<lsigma2g.size();i++)
+        f<<lsigma2g[i]<<" ";
 	f<<endl;
 
 	//other data
@@ -1048,7 +1054,7 @@ bool LoadWroldFromFile(KeyFrameDatabase *db, Map *wd, ORBVocabulary* mpvoc)
 	MapKFIndexPointer kfIdxPtMap;
 	VecUL vRefKFIdInMP;
 	VecUL vKFmnId,vMPmnId;
-	bool ret,ret1,ret2,ret3,ret4;
+    bool ret1,ret2,ret3,ret4;
 
 	//step 1. load and create all mappoints
 	ret1=loadMPVariables(db,wd,&mpIdxPtMap,vMPmnId,vRefKFIdInMP);
@@ -1057,7 +1063,7 @@ bool LoadWroldFromFile(KeyFrameDatabase *db, Map *wd, ORBVocabulary* mpvoc)
 	ret2=loadKFVariables(db,wd,mpvoc,&kfIdxPtMap,vKFmnId);
 
 	//step 3. associate pointers in MPs and KFs
-	ret3=loadMPKFPointers(mpIdxPtMap, kfIdxPtMap, vRefKFIdInMP);
+    ret3=loadMPKFPointers(mpIdxPtMap, kfIdxPtMap, vKFmnId, vMPmnId, vRefKFIdInMP );
 
 	//step 4. associate pointers in invertfile of vocabulary
 	ret4=loadKFDatabase(db);

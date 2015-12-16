@@ -130,8 +130,8 @@ int main(int argc, char **argv)
 	{
 		cout<<"load world file failed."<<endl;
 		// operations
-		World->clear();
-		Database->clear();
+        World.clear();
+        Database.clear();
 		
 	}
 
@@ -217,7 +217,7 @@ int main(int argc, char **argv)
 	//------------------------------------------
 
 	//Added by wangjing
-	SaveWorldToFile(World);
+    SaveWorldToFile(World,Database);
 
 	//------------------------------------------
 	//------------------------------------------
