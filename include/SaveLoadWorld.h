@@ -35,7 +35,7 @@ bool loadKFVariables(KeyFrameDatabase *db, Map *wd, ORBVocabulary* mpvoc,
                      MapKFIndexPointer *kfIdxPtMap, VecUL &_VecKFmnId);
 
 // load voc-keyframe invert index, after keyframe data is loaded
-bool loadKFDatabase(KeyFrameDatabase *db);
+bool loadKFDatabase(KeyFrameDatabase *db, MapKFIndexPointer &kfIdxPtMap);
 
 // associate pointers in MPs and KFs
 bool loadMPKFPointers(MapMPIndexPointer &mpIdxPtMap, MapKFIndexPointer &kfIdxPtMap,
@@ -635,7 +635,7 @@ bool loadMPKFPointers(MapMPIndexPointer &mpIdxPtMap, MapKFIndexPointer &kfIdxPtM
     return true;
 }
 
-bool loadKFDatabase(KeyFrameDatabase *db)
+bool loadKFDatabase(KeyFrameDatabase *db, MapKFIndexPointer &kfIdxPtMap)
 {
     ifstream ifs;
     string strFile = ros::package::getPath("ORB_SLAM")+"/tmp/"+"KeyFrameDatabase.txt";
@@ -645,6 +645,44 @@ bool loadKFDatabase(KeyFrameDatabase *db)
         cout<<"database file open failed."<<endl;
         return false;
     }
+
+	while(!ifs.eof())
+	{
+		string slkfdb;
+		stringstream sskfdb;
+		getline(ifs,slkfdb);
+		sskfdb<<slkfdb;
+		size_t listsize, tmpIdx;
+		sskfdb>>tmpIdx>>listsize;
+		for(size_t i=0;i<listsize;i++)
+		{
+			long unsigned int kfmnId;
+			sskfdb>>kfmnId;
+			db->add(kfIdxPtMap[kfmnId]);
+			if(sskfdb.fail()) cerr<<"sskfdb.fail(), shouldn't"<<endl;
+		}
+	}
+
+
+//for(std::vector<list<KeyFrame*> >::iterator vit=Database.mvInvertedFile.begin(), vend=Database.mvInvertedFile.end(); vit!=vend; vit++, tmpIdx++)
+//{
+//	//if(vit==Database.mvInvertedFile.begin() || vit==(Database.mvInvertedFile.begin()+1))
+//		cout<<tmpIdx<<endl;
+
+//	list<KeyFrame*> plKF = *vit;
+//	int listsize = plKF.size();
+//	if(listsize > 0)	//only save the word seen in KeyFrames.
+//	{
+//		f << tmpIdx << " " << listsize << " ";	//save wordID,	and number of KFs see this word
+//		for(list<KeyFrame*>::iterator lit=plKF.begin(), lend=plKF.end(); lit!=lend; lit++)
+//		{
+//			KeyFrame* pKFi = *lit;
+//			f << pKFi->mnId <<" ";				//save ID of KFs see the word
+//		}
+//		f << endl;
+//	}
+//}
+
 
 //	db->add(
 
@@ -682,7 +720,7 @@ void SaveWorldToFile( Map& World, KeyFrameDatabase& Database)
 	int tmpIdx = 0;
     for(std::vector<list<KeyFrame*> >::iterator vit=Database.mvInvertedFile.begin(), vend=Database.mvInvertedFile.end(); vit!=vend; vit++, tmpIdx++)
 	{
-		//if(vit==Database.mvInvertedFile.begin() || vit==(Database.mvInvertedFile.begin()+1))
+		if(vit==Database.mvInvertedFile.begin() || vit==(Database.mvInvertedFile.begin()+1))
 			cout<<tmpIdx<<endl;
 	
 		list<KeyFrame*> plKF = *vit;
@@ -1089,7 +1127,7 @@ bool LoadWroldFromFile(KeyFrameDatabase *db, Map *wd, ORBVocabulary* mpvoc)
 
 	//step 4. associate pointers in invertfile of vocabulary
     cout<<"loading step 4.."<<endl;
-	ret4=loadKFDatabase(db);
+	ret4=loadKFDatabase(db, kfIdxPtMap);
 
 	//step 5. world
     cout<<"loading step 5.."<<endl;
