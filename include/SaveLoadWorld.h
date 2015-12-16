@@ -666,29 +666,6 @@ bool loadKFDatabase(KeyFrameDatabase *db, MapKFIndexPointer &kfIdxPtMap)
 		}
 	}
 
-
-//for(std::vector<list<KeyFrame*> >::iterator vit=Database.mvInvertedFile.begin(), vend=Database.mvInvertedFile.end(); vit!=vend; vit++, tmpIdx++)
-//{
-//	//if(vit==Database.mvInvertedFile.begin() || vit==(Database.mvInvertedFile.begin()+1))
-//		cout<<tmpIdx<<endl;
-
-//	list<KeyFrame*> plKF = *vit;
-//	int listsize = plKF.size();
-//	if(listsize > 0)	//only save the word seen in KeyFrames.
-//	{
-//		f << tmpIdx << " " << listsize << " ";	//save wordID,	and number of KFs see this word
-//		for(list<KeyFrame*>::iterator lit=plKF.begin(), lend=plKF.end(); lit!=lend; lit++)
-//		{
-//			KeyFrame* pKFi = *lit;
-//			f << pKFi->mnId <<" ";				//save ID of KFs see the word
-//		}
-//		f << endl;
-//	}
-//}
-
-
-//	db->add(
-
 	return true;
 }
 
@@ -699,21 +676,9 @@ void SaveWorldToFile( Map& World, KeyFrameDatabase& Database)
 	long unsigned int mpSaveCnt,kfSaveCnt;
 	mpSaveCnt=0;
 	kfSaveCnt=0;
-
-//	//------------------------------------------------
-//	//save world data
-//	{
-//	ofstream fwd;
-//	cout << endl << "Saving World data" << endl;
-//	strFile = ros::package::getPath("ORB_SLAM")+"/tmp/"+"WorldData.txt";
-//	fwd.open(strFile.c_str());
-//	fwd<<fixed;
-//	fwd<<World.mnMaxKFid<<World.mbMapUpdated<<endl;
-//	
-//	}
 	
-	//------------------------------------------------
-	//save keyframe database
+	//1 1. save keyframe database
+	//1 -----------------------------------------------
 	{
 	ofstream f;
 	cout << endl << "Saving KeyFrameDatabase" << endl;
@@ -741,11 +706,11 @@ void SaveWorldToFile( Map& World, KeyFrameDatabase& Database)
 	}
 	f.close();
 	}
+	//1 -----------------------------------------------
 
-	//------------------------------------------------
-	/*
-	save mappoint files
-	*/
+
+	//1 2. save mappoint files
+	//1 -----------------------------------------------
 	{
 	ofstream fmpVar,fmpObs;
 	cout << endl << "Saving MapPoint" << endl;
@@ -764,7 +729,8 @@ void SaveWorldToFile( Map& World, KeyFrameDatabase& Database)
 		MapPoint* pMPi = *vit;
 		if(!pMPi->isBad())	//only save those not bad
 		{
-			// 1. save plain variable
+			//2 2.1 save plain variable
+			//2 ---------------------------
 			// public, 15
 			fmpVar << pMPi->nNextId << " ";
 			fmpVar << pMPi->mnId << " ";
@@ -794,25 +760,17 @@ void SaveWorldToFile( Map& World, KeyFrameDatabase& Database)
 			{
 				fmpVar << tpdes[ti] <<" ";
 			}
-//			  if(printflag)
-//			  {
-//				  const unsigned char *tp = tdes.ptr();
-//				  for(int ti=0;ti<32;ti++)
-//					  cout<<(int)tp[ti]<<" ";
-//				  cout<<endl;
-//				  cout<<"cout worldpos: "<<twp<<endl;
-//				  cout<<"normal vector: "<<tnv<<endl;
-//				  cout<<"cout descriptor: "<<tdes<<endl;
-//				  printflag = false;
-//			  }
 			fmpVar << pMPi->GetmnVisible() <<" ";
 			fmpVar << pMPi->GetmnFound() <<" ";
 			fmpVar << pMPi->GetMinDistanceInvariance() <<" ";
 			fmpVar << pMPi->GetMaxDistanceInvariance() <<" ";
 			fmpVar << pMPi->GetReferenceKeyFrame()->mnId <<" ";
 			fmpVar << std::endl;
+			//2 ---------------------------
 
-			// 2. save observations
+
+			//2 2.2 save observations
+			//2 ---------------------------
 			map<KeyFrame*,size_t> observations = pMPi->GetObservations();
 			int nObs = observations.size();
 			fmpObs << nObs << " ";	//total number 
@@ -824,6 +782,7 @@ void SaveWorldToFile( Map& World, KeyFrameDatabase& Database)
 			}
 
 			fmpObs << std::endl;
+			//2 ---------------------------
 
 			mpSaveCnt++;
 		}
@@ -837,13 +796,12 @@ void SaveWorldToFile( Map& World, KeyFrameDatabase& Database)
     if(mpSaveCnt!=tmpIdx)
         cerr<<"mpSaveCnt != tmpIdx. impossible!"<<endl;
 	}
+	//1 -----------------------------------------------
 
 
  
-	//------------------------------------------------
-	/*
-	save keyframe files
-	*/
+	//1 3. save keyframe files
+	//1 ------------------------------------------------
 	{
 	ofstream fkfVar,fkfKeys,fkfKeysUn,fkfDes,fkfMPids,fkfLPEGs;
 	cout << endl << "Saving KeyFrames" << endl;
@@ -885,7 +843,8 @@ void SaveWorldToFile( Map& World, KeyFrameDatabase& Database)
 		KeyFrame* pKFi = *vitKFs;
 		if(!pKFi->isBad())
 		{
-			//1. save plain variables
+			//2 3.1 save plain variables
+			//2 -------------------------------
 			// public
 			fkfVar << setprecision(7);
 			fkfVar << pKFi->nNextId <<" ";
@@ -925,8 +884,10 @@ void SaveWorldToFile( Map& World, KeyFrameDatabase& Database)
 				fkfVar << Owi.at<float>(ti) <<" ";
 			}
 			fkfVar << endl;
+			//2 -------------------------------
 
-			// 2. save KeyPoints and KeyPointsUn
+			//2 3.2 save KeyPoints and KeyPointsUn
+			//2 -------------------------------
 			vector<cv::KeyPoint> mvKeysi = pKFi->GetKeyPoints();
 			fkfKeys << mvKeysi.size() <<" ";
 
@@ -947,8 +908,10 @@ void SaveWorldToFile( Map& World, KeyFrameDatabase& Database)
 				fkfKeysUn << kpi.response << " " << kpi.octave << " " << kpi.class_id <<" ";
 			}
 			fkfKeysUn <<endl;
+			//2 -------------------------------
 
-			// 3. save descriptors
+			//2 3.3 save descriptors
+			//2 -------------------------------
 			cv::Mat descriptorsi = pKFi->GetDescriptors();
 			int desnumi = descriptorsi.rows;
 			fkfDes << desnumi <<" ";	//number of descriptors
@@ -962,8 +925,11 @@ void SaveWorldToFile( Map& World, KeyFrameDatabase& Database)
 				}
 			}
 			fkfDes <<endl;
+			//2 -------------------------------
 
-			// 4. save mappoint id
+
+			//2 3.4 save mappoint id
+			//2 -------------------------------
             vector<MapPoint*> vpsi = pKFi->GetMapPointMatches();
             size_t nMPcnt=0;
             //compute valid mappoint number
@@ -986,8 +952,11 @@ void SaveWorldToFile( Map& World, KeyFrameDatabase& Database)
 			fkfMPids <<endl;
 			if(scnt!=pKFi->GetMapPoints().size())
 				cerr<<"scnt!=pKFi->GetMapPoints().size(), shouldn't"<<endl;
-	
-			// 5. save loopedges
+			//2 -------------------------------
+
+			
+			//2 3.5 save loopedges
+			//2 -------------------------------
 			set<KeyFrame*> lpedges = pKFi->GetLoopEdges();
 			size_t nlpegs = lpedges.size();
 			fkfLPEGs << pKFi->mnId << " "<<nlpegs<<" ";
@@ -1000,8 +969,9 @@ void SaveWorldToFile( Map& World, KeyFrameDatabase& Database)
 				}
 			}
 			fkfLPEGs <<endl;
+			//2 -------------------------------
 			
-			// xxx. for test
+			//3 xxx. for test
 			if(printflag && tmpIdx>=4)
 			{
 				cout<<"print for test"<<endl;
@@ -1042,10 +1012,11 @@ void SaveWorldToFile( Map& World, KeyFrameDatabase& Database)
     if(kfSaveCnt!=tmpIdx)
         cerr<<"kfSaveCnt != tmpIdx. impossible!"<<endl;
 	}
+	//1 ------------------------------------------------
 
 	
-	//------------------------------------------------
-	//save global parameters
+	//1 4. save global parameters
+	//1 ------------------------------------------------
 	{
 	ofstream f;
 	cout<<endl<<"Saving global params"<<endl;
@@ -1053,24 +1024,30 @@ void SaveWorldToFile( Map& World, KeyFrameDatabase& Database)
 	f.open(strFile.c_str());
 	f<<fixed;
 	f<<setprecision(10);
+
 	
-	//MapPoint data
-	//Line0. MP.nNextID
+	//3 Line0. MP.nNextID, mpSaveCnt, kfSaveCnt
+	//3 ------------------------------------------------
 	f<<MapPoint::nNextId<< " "<<mpSaveCnt<<" "<<kfSaveCnt<<" "<<endl;
 	
 	//KeyFrame data
 	vector<KeyFrame*> vpKFt = World.GetAllKeyFrames();
 	KeyFrame* pKF0 = vpKFt[0];
-	//Line1.  KF.nNextID, mfGridElementWidthInv, mfGridElementHeightInv,fx/fy/cx/cy,
-	//(cont.) mnMinX,mnMinY,mnMaxX,mnMaxY,mK
+	//3 ------------------------------------------------
+	
+	//3 Line1.  KF.nNextID, mfGridElementWidthInv, mfGridElementHeightInv,fx/fy/cx/cy,
+	//3 (cont.) mnMinX,mnMinY,mnMaxX,mnMaxY,mK
+	//3 ------------------------------------------------
 	f<<KeyFrame::nNextId<<" ";
 	f<<pKF0->mfGridElementWidthInv<<" "<<pKF0->mfGridElementHeightInv<<" ";
 	f<<pKF0->fx<<" "<<pKF0->fy<<" "<<pKF0->cx<<" "<<pKF0->cy<<" ";
 	vector<int> tv=pKF0->GetMinMaxXY();
 	f<<tv[0]<<" "<<tv[1]<<" "<<tv[2]<<" "<<tv[3]<<" ";
-	
 	f<<endl;
-	//Line2. mnScaleLevels(N), N*mvScaleFactors, N*mvLevelSigma2 for the first 2 KFs. 
+	//3 ------------------------------------------------
+	
+	//3 Line2. mnScaleLevels(N), N*mvScaleFactors, N*mvLevelSigma2 for the first 2 KFs. 
+	//3 ------------------------------------------------
 	f<<pKF0->GetScaleLevels()<<" ";
 	vector<float> sfactors =  pKF0->GetScaleFactors();
     for(size_t i=0;i<sfactors.size();i++)
@@ -1079,7 +1056,10 @@ void SaveWorldToFile( Map& World, KeyFrameDatabase& Database)
     for(size_t i=0;i<lsigma2.size();i++)
 		f<<lsigma2[i]<<" ";
 	f<<endl; 
-	//Line3. mnScaleLevels(N), N*mvScaleFactors, N*mvLevelSigma2 for other KFs. 
+	//3 ------------------------------------------------
+	
+	//3 Line3. mnScaleLevels(N), N*mvScaleFactors, N*mvLevelSigma2 for other KFs. 
+	//3 ------------------------------------------------
     KeyFrame* pKFg=static_cast<KeyFrame*>(NULL);
 	for(vector<KeyFrame*>::iterator kfit=vpKFt.begin(), kfend=vpKFt.end(); kfit!=kfend; kfit++)
 	{
@@ -1097,10 +1077,9 @@ void SaveWorldToFile( Map& World, KeyFrameDatabase& Database)
     for(size_t i=0;i<lsigma2g.size();i++)
         f<<lsigma2g[i]<<" ";
 	f<<endl;
+	//3 ------------------------------------------------
+	//1 ------------------------------------------------
 
-	//other data
-
-	//f<<endl;
 	
 	f.close();
 	}
@@ -1116,23 +1095,23 @@ bool LoadWroldFromFile(KeyFrameDatabase *db, Map *wd, ORBVocabulary* mpvoc)
 	VecUL vKFmnId,vMPmnId;
     bool ret1,ret2,ret3,ret4;
 
-	//step 1. load and create all mappoints
+	//1 step 1. load and create all mappoints
     cout<<"loading step 1.."<<endl;
 	ret1=loadMPVariables(db,wd,&mpIdxPtMap,vMPmnId,vRefKFIdInMP);
 
-	//step 2. load and craete all keyframes
+	//1 step 2. load and craete all keyframes
     cout<<"loading step 2.."<<endl;
 	ret2=loadKFVariables(db,wd,mpvoc,&kfIdxPtMap,vKFmnId);
 
-	//step 3. associate pointers in MPs and KFs
+	//1 step 3. associate pointers in MPs and KFs
     cout<<"loading step 3.."<<endl;
     ret3=loadMPKFPointers(mpIdxPtMap, kfIdxPtMap, vKFmnId, vMPmnId, vRefKFIdInMP );
 
-	//step 4. associate pointers in invertfile of vocabulary
+	//1 step 4. associate pointers in invertfile of vocabulary
     cout<<"loading step 4.."<<endl;
 	ret4=loadKFDatabase(db, kfIdxPtMap);
 
-	//step 5. world
+	//1 step 5. world
     cout<<"loading step 5.."<<endl;
 	if(ret1&&ret2&&ret3&&ret4)
 	{
