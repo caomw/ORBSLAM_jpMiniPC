@@ -116,41 +116,40 @@ int main(int argc, char **argv)
     ORB_SLAM::Map World;
 
 
-	//Added by wangjing
-	bool bReadOK=true;
+//	//Added by wangjing
+//	bool bReadOK=true;
 
-	MapMPIndexPointer mpIdxPtMap;
-	if(bReadOK)
-	bReadOK = loadMPVariables(&Database, &World, &mpIdxPtMap);
-	
-	MapKFIndexPointer kfIdxPtMap;
-	if(bReadOK)
-	bReadOK = loadKFVariables(&Database, &World, &kfIdxPtMap);
-	
-//	bReadOK = loadKFDatabase(&Database);
+//	MapMPIndexPointer mpIdxPtMap;
+//	if(bReadOK)
+//	bReadOK = loadMPVariables(&Database, &World, &mpIdxPtMap);
+//	
+//	MapKFIndexPointer kfIdxPtMap;
+//	if(bReadOK)
+//	bReadOK = loadKFVariables(&Database, &World, &kfIdxPtMap);
+//	
 
-	if(bReadOK)
-	{
-		cout<<"load world file successfully."<<endl;
-		// operations
-		
-//	//to be added of mappoints
-//	tmpMP.mObservations;
-//	tmpMP.mpRefKF;
+//	if(bReadOK)
+//	{
+//		cout<<"load world file successfully."<<endl;
+//		// operations
+//		
+//	//	//to be added of mappoints
+//	//	tmpMP.mObservations;
+//	//	tmpMP.mpRefKF;
 
-	}
-	else
-	{
-		cout<<"load world file failed."<<endl;
-		// operations
-		World->clear();
-		Database->clear();
-		// to delete mpIdxPtMap and kfIdxPtMap
-	}
+//	//	//to be added of keyframes
+//	//	std::vector<MapPoint*> mvpMapPoints; (HAVING vector<vector<long unsigned int> > vMPIdInKF)
 
-//	//to be added of mappoints
-//	tmpMP.mObservations;
-//	tmpMP.mpRefKF;
+//	}
+//	else
+//	{
+//		cout<<"load world file failed."<<endl;
+//		// operations
+//		World->clear();
+//		Database->clear();
+//		// to delete mpIdxPtMap and kfIdxPtMap
+//	}
+
 
 
     FramePub.SetMap(&World);
@@ -254,24 +253,6 @@ int main(int argc, char **argv)
         std::vector<float> tmpScaleFactors = pKFi->GetScaleFactors();
         std::vector<float> tmpScaleLevelSigma2 = pKFi->GetVectorScaleSigma2();
         std::cout<<pKFi->mnId<<"\t"<<pKFi->GetScaleLevels()<<"\tscale factor: ";
-        for(size_t j=0;j<tmpScaleFactors.size();j++)
-        {
-            std::cout<<tmpScaleFactors[j]<<" ";
-        }
-        std::cout<<endl;
-
-
-        std::cout<<pKFi->mnId<<"\tlevel sigma2: ";
-        for(size_t j=0;j<tmpScaleLevelSigma2.size();j++)
-        {
-            std::cout<<tmpScaleLevelSigma2[j]<<" ";
-        }
-        std::cout<<endl;
-
-        std::cout<<pKFi->mnId<<"\tnNextId: "<<pKFi->nNextId<<endl;
-        std::cout<<pKFi->mnId<<"\tmfGridElementWidthInv: "<<pKFi->mfGridElementWidthInv<<endl;
-        std::cout<<pKFi->mnId<<"\tmfGridElementHeightInv: "<<pKFi->mfGridElementHeightInv<<endl;
-        std::cout<<pKFi->mnId<<"\tfx/fy/cx/cy: "<<pKFi->fx<<" "<<pKFi->fy<<" "<<pKFi->cx<<" "<<pKFi->cy<<endl;
     }
 	//------------------------------------------
 	//------------------------------------------

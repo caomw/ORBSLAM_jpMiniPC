@@ -88,6 +88,7 @@ public:
 	void SetDescriptor(cv::Mat des){des.copyTo(mDescriptor);};
     void SetMinDistance(float mindis){mfMinDistance = mindis;};
     void SetMaxDistance(float maxdis){mfMaxDistance = maxdis;};
+	void SetRefKFPointer(const KeyFrame* _mpRefKF){mpRefKF=_mpRefKF;};
 
 public:
     long unsigned int mnId;

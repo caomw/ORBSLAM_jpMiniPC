@@ -139,6 +139,8 @@ public:
 	vector<int> GetMinMaxXY(void)	{	return vector<int>({mnMinX,mnMinY,mnMaxX,mnMaxY});	}
 	void SetKeyPoints(vector<cv::KeyPoint> vkps) {mvKeys = vkps};
 	void SetKeyPointsUn(vector<cv::KeyPoint> vkpsun) {mvKeysUn = vkpsun};
+	void SetDescriptors(cv::Mat des)	{mDescriptors = des.clone();};
+	void SetmvpMapPoints(vector<MapPoint*> _vmps) {mvpMapPoints = _vmps;};
 //	void SetMinMaxXY(int ix,int iy,int ax,int ay){mnMinX=ix;mnMinY=iy;mnMaxX=ax;mnMaxY=ay};
 //	void SetmK(cv::Mat _mk){_mk.copyTo(mK);}
 //	void SetScaleParams(int _mnScaleLevels,vector<float> _mvScaleFactors,vector<float> _mvLevelSigma2,vector<float> _mvInvLevelSigma2){
