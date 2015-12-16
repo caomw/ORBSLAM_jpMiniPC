@@ -148,6 +148,13 @@ int main(int argc, char **argv)
 
     Tracker.SetKeyFrameDatabase(&Database);
 
+    //Added by wangjing
+    if(bReadOK)
+    {
+        Tracker.mState = Tracking::LOST;
+        Tracker.mLastProcessedState = Tracking::LOST;
+    }
+
     //Initialize the Local Mapping Thread and launch
     ORB_SLAM::LocalMapping LocalMapper(&World);
     boost::thread localMappingThread(&ORB_SLAM::LocalMapping::Run,&LocalMapper);
@@ -238,6 +245,7 @@ int main(int argc, char **argv)
         std::vector<float> tmpScaleFactors = pKFi->GetScaleFactors();
         std::vector<float> tmpScaleLevelSigma2 = pKFi->GetVectorScaleSigma2();
         std::cout<<pKFi->mnId<<"\t"<<pKFi->GetScaleLevels()<<"\tscale factor: ";
+        std::cout<<endl;
     }
 	//------------------------------------------
 	//------------------------------------------

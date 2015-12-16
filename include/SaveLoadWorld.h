@@ -91,16 +91,16 @@ bool loadMPVariables(KeyFrameDatabase *db, Map *wd, MapMPIndexPointer *mpIdxPtMa
 	unsigned long int nNextId;
 
 	Frame tmpFrame;
+    tmpFrame.mTcw = Mat::zeros(4,4,CV_32F);
     KeyFrame * tmpKF = new KeyFrame(tmpFrame, wd, db);
 
 	unsigned long int linecnt=0;
-	while(!ifs.eof())
-	{
-		
+    for(unsigned long int smpcnt=0;smpcnt<mpSaveCnt;smpcnt++)
+    {
 		string sl;
 		stringstream ss;
 		
-		getline(ifs,sl);
+        getline(ifs,sl);
 		ss << sl;
 
 		// plain variables in MapPoint
@@ -113,7 +113,7 @@ bool loadMPVariables(KeyFrameDatabase *db, Map *wd, MapMPIndexPointer *mpIdxPtMa
 		Mat mWorldPos = Mat::zeros(3, 1, CV_32F);
 		Mat mNormalVector = Mat::zeros(3, 1, CV_32F);
 		Mat mDescriptor = Mat::zeros(1, 32, CV_8UC1);
-		
+
 		ss >> nNextId >> mnId >> mnFirstKFid >> mTrackProjX >> mTrackProjY >> mbTrackInView >> mnTrackScaleLevel >> mTrackViewCos >> mnTrackReferenceForFrame;
 		ss >> mnLastFrameSeen >> mnBALocalForKF >> mnFuseCandidateForKF >> mnLoopPointForKF >> mnCorrectedByKF >> mnCorrectedReference;
 		for (int i = 0; i < 3; i++)
@@ -176,7 +176,7 @@ bool loadMPVariables(KeyFrameDatabase *db, Map *wd, MapMPIndexPointer *mpIdxPtMa
 
 		// add to the mapping from index to pointer
 		if(mpIdxPtMap->count(mnId)>0)
-			cerr<<"exist? shouldn't!!"<<endl;
+            cerr<<mnId<<" mappoint count "<< mpIdxPtMap->count(mnId)<<"exist? shouldn't!!"<<endl;
 		(*mpIdxPtMap)[mnId] = tmpMP;
 
 
@@ -210,6 +210,8 @@ bool loadMPVariables(KeyFrameDatabase *db, Map *wd, MapMPIndexPointer *mpIdxPtMa
 bool loadKFVariables(KeyFrameDatabase *db, Map *wd, ORBVocabulary* mpvoc,
 	MapKFIndexPointer *kfIdxPtMap, VecUL &_VecKFmnId)
 {
+    bool debugflag=true;
+
 	ifstream ifkfVar,ifkfKeys,ifkfKeysUn,ifkfDes,ifGlobal;
 	if(	!myOpenFile(ifkfVar,	string(ros::package::getPath("ORB_SLAM")+"/tmp/"+"kfVariables.txt")) 	||
 		!myOpenFile(ifkfKeys,	string(ros::package::getPath("ORB_SLAM")+"/tmp/"+"kfKeyPoints.txt")) 	||
@@ -306,6 +308,7 @@ bool loadKFVariables(KeyFrameDatabase *db, Map *wd, ORBVocabulary* mpvoc,
 	tmpFrame.mvScaleFactors = mvScaleFactorsOther;
 	tmpFrame.mvLevelSigma2 = mvLevelSigma2Other;
 	tmpFrame.mvInvLevelSigma2 = mvInvLevelSigma2Other;
+    tmpFrame.mTcw = Mat::zeros(4,4,CV_32F);
 
 	// KeyFrame 0&1 is different. ORBextractor settings are fixed as 2000/1.2/8
 	Frame tmpFrame0(tmpFrame);
@@ -316,7 +319,8 @@ bool loadKFVariables(KeyFrameDatabase *db, Map *wd, ORBVocabulary* mpvoc,
 
 	// read each row of the files
 	unsigned long int linecnt=0;
-	while(!ifkfVar.eof())
+//    while(!ifkfVar.eof())
+    for(unsigned long int skfcnt=0;skfcnt<kfSaveCnt;skfcnt++)
 	{	
 		string slVar,slKeys,slKeysUn,slDes;
 		stringstream ssVar,ssKeys,ssKeysUn,ssDes;
@@ -387,7 +391,9 @@ bool loadKFVariables(KeyFrameDatabase *db, Map *wd, ORBVocabulary* mpvoc,
 			ssKeys >> ptx>>pty>>size>>angle>>response>>octave>>classid;
 			*vit = cv::KeyPoint(ptx,pty,size,angle,response,octave,classid);
 			if(ssKeys.fail())
-				cerr<<"ssKeys fail. shouldn't"<<endl;
+            {if(debugflag)
+                cerr<<"loopcnt: "<<skfcnt<<" mnId "<<mnId<<" ssKeys fail. shouldn't"<<endl;
+                debugflag=false;}
 		}
 		tmpKF->SetKeyPoints(tmvKeys);
 //		std::vector<cv::KeyPoint> mvKeys;
@@ -466,8 +472,8 @@ bool loadKFVariables(KeyFrameDatabase *db, Map *wd, ORBVocabulary* mpvoc,
 
 		
 		// add to the mapping from index to pointer
-		if(kfIdxPtMap->count(mnId)>0)
-			cerr<<"exist? shouldn't!!"<<endl;
+        if(kfIdxPtMap->count(mnId)>0)
+            cerr<<mnId<<" KF count "<<kfIdxPtMap->count(mnId)<<" exist? shouldn't!!"<<endl;
 		(*kfIdxPtMap)[mnId] = tmpKF;
 
 		linecnt++;
@@ -495,6 +501,7 @@ bool loadKFVariables(KeyFrameDatabase *db, Map *wd, ORBVocabulary* mpvoc,
 bool loadMPKFPointers(MapMPIndexPointer &mpIdxPtMap, MapKFIndexPointer &kfIdxPtMap,
 		const VecUL& VecKFmnId, const VecUL& VecMPmnId, const VecUL &vRefKFIdInMP)
 {
+    bool debugflag=true;
 	ifstream ifkfMPids,ifkfLPEGs,ifGlobal,ifmpObs;
 	if(	!myOpenFile(ifkfMPids,	string(ros::package::getPath("ORB_SLAM")+"/tmp/"+"kfMapPointsID.txt"))	||
 		!myOpenFile(ifkfLPEGs,	string(ros::package::getPath("ORB_SLAM")+"/tmp/"+"kfLoopEdges.txt"))   	||
@@ -575,7 +582,11 @@ bool loadMPKFPointers(MapMPIndexPointer &mpIdxPtMap, MapKFIndexPointer &kfIdxPtM
 			pKF->AddMapPoint(pMP,tvpMPidx);
             if((int)tvpMPidx!=pMP->GetIndexInKeyFrame(pKF))
 				cerr<<tvpMPidx<<" "<<pMP->GetIndexInKeyFrame(pKF)<<"\ntvpMPidx!=pMP->GetIndexInKeyFrame(pKF), shouldn't"<<endl;
-			if(ssMPids.fail())	cerr<<"ssMPids fail. shouldn't"<<endl;
+            if(ssMPids.fail() && debugflag)
+            {
+                cerr<<"kfmnId:"<<kfmnId<<" linecnt: "<<linecnt<<"ssMPids fail. shouldn't"<<endl;
+                debugflag=false;
+            }
 		}
 		//pKF->mvpMapPoints
 		//		std::vector<MapPoint*> mvpMapPoints;
@@ -626,14 +637,14 @@ bool loadMPKFPointers(MapMPIndexPointer &mpIdxPtMap, MapKFIndexPointer &kfIdxPtM
 
 bool loadKFDatabase(KeyFrameDatabase *db)
 {
-//	ifstream ifs;
-//	string strFile = ros::package::getPath("ORB_SLAM")+"/tmp/"+"KeyFrameDatabase.txt";
-//	ifs.open(strFile.c_str());
-//	if(!ifs.is_open() || ifs.eof())
-//	{
-//		cout<<"database file open failed."<<endl;
-//		return false;
-//	}
+    ifstream ifs;
+    string strFile = ros::package::getPath("ORB_SLAM")+"/tmp/"+"KeyFrameDatabase.txt";
+    ifs.open(strFile.c_str());
+    if(!ifs.is_open() || ifs.eof())
+    {
+        cout<<"database file open failed."<<endl;
+        return false;
+    }
 
 //	db->add(
 
@@ -782,8 +793,8 @@ void SaveWorldToFile( Map& World, KeyFrameDatabase& Database)
 	fmpObs.close();
 	
 	cout<<"total "<<mpSaveCnt<<" MapPoints saved."<<endl;
-	if(mpSaveCnt==tmpIdx)
-		cerr<<"mpSaveCnt = tmpIdx. impossible!"<<endl;
+    if(mpSaveCnt!=tmpIdx)
+        cerr<<"mpSaveCnt != tmpIdx. impossible!"<<endl;
 	}
 
 
@@ -912,17 +923,25 @@ void SaveWorldToFile( Map& World, KeyFrameDatabase& Database)
 			fkfDes <<endl;
 
 			// 4. save mappoint id
-			vector<MapPoint*> vpsi = pKFi->GetMapPointMatches(); 
-			fkfMPids << pKFi->mnId << " "<<vpsi.size() <<" ";	//mnId & number of mappoints
-			size_t scnt=0;
-//			for(vector<MapPoint*>::iterator vit=vpsi.begin(), vend=vpsi.end(); vit!=vend; vit++,mvpMPidx++)
+            vector<MapPoint*> vpsi = pKFi->GetMapPointMatches();
+            size_t nMPcnt=0;
+            //compute valid mappoint number
 			for(size_t mvpMPidx=0, iend=vpsi.size();mvpMPidx<iend;mvpMPidx++)
 			{
 				MapPoint* vit = vpsi[mvpMPidx];
-				if(!vit || vit->isBad()) continue;
-				fkfMPids << vit->mnId <<" "<<mvpMPidx<<" ";
-				scnt++;
+                if(!vit || vit->isBad()) continue;
+                nMPcnt++;
 			}
+
+            fkfMPids << pKFi->mnId << " "<<nMPcnt <<" ";	//mnId & number of mappoints
+            size_t scnt=0;
+            for(size_t mvpMPidx=0, iend=vpsi.size();mvpMPidx<iend;mvpMPidx++)
+            {
+                MapPoint* vit = vpsi[mvpMPidx];
+                if(!vit || vit->isBad()) continue;
+                fkfMPids << vit->mnId <<" "<<mvpMPidx<<" ";
+                scnt++;
+            }
 			fkfMPids <<endl;
 			if(scnt!=pKFi->GetMapPoints().size())
 				cerr<<"scnt!=pKFi->GetMapPoints().size(), shouldn't"<<endl;
@@ -979,8 +998,8 @@ void SaveWorldToFile( Map& World, KeyFrameDatabase& Database)
 	fkfLPEGs.close();
 
 	cout<<"total "<<kfSaveCnt<<" KeyFrames saved."<<endl;
-	if(kfSaveCnt==tmpIdx)
-		cerr<<"kfSaveCnt = tmpIdx. impossible!"<<endl;
+    if(kfSaveCnt!=tmpIdx)
+        cerr<<"kfSaveCnt != tmpIdx. impossible!"<<endl;
 	}
 
 	
@@ -1057,18 +1076,23 @@ bool LoadWroldFromFile(KeyFrameDatabase *db, Map *wd, ORBVocabulary* mpvoc)
     bool ret1,ret2,ret3,ret4;
 
 	//step 1. load and create all mappoints
+    cout<<"loading step 1.."<<endl;
 	ret1=loadMPVariables(db,wd,&mpIdxPtMap,vMPmnId,vRefKFIdInMP);
 
 	//step 2. load and craete all keyframes
+    cout<<"loading step 2.."<<endl;
 	ret2=loadKFVariables(db,wd,mpvoc,&kfIdxPtMap,vKFmnId);
 
 	//step 3. associate pointers in MPs and KFs
+    cout<<"loading step 3.."<<endl;
     ret3=loadMPKFPointers(mpIdxPtMap, kfIdxPtMap, vKFmnId, vMPmnId, vRefKFIdInMP );
 
 	//step 4. associate pointers in invertfile of vocabulary
+    cout<<"loading step 4.."<<endl;
 	ret4=loadKFDatabase(db);
 
 	//step 5. world
+    cout<<"loading step 5.."<<endl;
 	if(ret1&&ret2&&ret3&&ret4)
 	{
 		for(MapKFIndexPointer::iterator mit=kfIdxPtMap.begin(), mend=kfIdxPtMap.end(); mit!=mend; mit++)
