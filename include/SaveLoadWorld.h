@@ -1135,7 +1135,6 @@ bool LoadWroldFromFile(KeyFrameDatabase *db, Map *wd, ORBVocabulary* mpvoc)
 		KeyFrame* pKF = mit->second;
 		db->add(pKF);
 	}
-	ret4=true;
 
 	//1 step 5. world
     cout<<"loading step 5.."<<endl;
@@ -1150,6 +1149,22 @@ bool LoadWroldFromFile(KeyFrameDatabase *db, Map *wd, ORBVocabulary* mpvoc)
 			wd->AddMapPoint(mit->second);
 		}
 	}	
+
+	//evaluate nNextId for Frame/MapPoint/KeyFrame
+	ifstream ifGlobal;
+	ret4 = myOpenFile(ifGlobal,	string(ros::package::getPath("ORB_SLAM")+"/tmp/"+"GlobalParams.txt"))
+	if(ret4)
+	{
+		long unsigned int gnNExtIdMP,kfSaveCnt,mpSaveCnt,frameNextId,kfNextId;
+		string slg;	stringstream ssg;
+		getline(ifGlobal, slg); 
+		ssg<<slg;
+		ssg>>gnNExtIdMP>>mpSaveCnt>>kfSaveCnt>>frameNextId>>kfNextId;
+		
+		MapPoint::nNextId = gnNExtIdMP;
+		Frame::nNextId = frameNextId;
+		KeyFrame::nNextId = kfNextId;
+	}
 
 	return (ret1&&ret2&&ret3&&ret4);
 }
