@@ -177,6 +177,8 @@ void Tracking::Run()
 void Tracking::GrabImage(const sensor_msgs::ImageConstPtr& msg)
 {
 
+    //cout<<"tp1 ";
+
     cv::Mat im;
 
     // Copy the ros image message to cv::Mat. Convert to grayscale if it is a color image.
@@ -205,12 +207,16 @@ void Tracking::GrabImage(const sensor_msgs::ImageConstPtr& msg)
         cv_ptr->image.copyTo(im);
     }
 
+    //cout<<"tp2 ";
+
     if(mState==WORKING || mState==LOST)
         mCurrentFrame = Frame(im,cv_ptr->header.stamp.toSec(),mpORBextractor,mpORBVocabulary,mK,mDistCoef);
     else
         mCurrentFrame = Frame(im,cv_ptr->header.stamp.toSec(),mpIniORBextractor,mpORBVocabulary,mK,mDistCoef);
 
     // Depending on the state of the Tracker we perform different tasks
+
+    //cout<<"tp3 ";
 
     if(mState==NO_IMAGES_YET)
     {
@@ -238,6 +244,8 @@ void Tracking::GrabImage(const sensor_msgs::ImageConstPtr& msg)
         // System is initialized. Track Frame.
         bool bOK;
 
+        //cout<<"tp4 ";
+
         // Initial Camera Pose Estimation from Previous Frame (Motion Model or Coarse) or Relocalisation
         if(mState==WORKING && !RelocalisationRequested())
         {
@@ -255,9 +263,13 @@ void Tracking::GrabImage(const sensor_msgs::ImageConstPtr& msg)
             bOK = Relocalisation();
         }
 
+        //cout<<"tp5 ";
+
         // If we have an initial estimation of the camera pose and matching. Track the local map.
         if(bOK)
             bOK = TrackLocalMap();
+
+        //cout<<"tp6 ";
 
         // If tracking were good, check if we insert a keyframe
         if(bOK)
@@ -277,6 +289,8 @@ void Tracking::GrabImage(const sensor_msgs::ImageConstPtr& msg)
                     mCurrentFrame.mvpMapPoints[i]=NULL;
             }
         }
+
+        //cout<<"tp7 ";
 
         if(bOK)
             mState = WORKING;
@@ -310,11 +324,13 @@ void Tracking::GrabImage(const sensor_msgs::ImageConstPtr& msg)
         }
 
         mLastFrame = Frame(mCurrentFrame);
+        //cout<<"tp8 ";
      }       
 
     // Update drawer
     mpFramePublisher->Update(this);
 
+    //cout<<"tp9 ";
     if(!mCurrentFrame.mTcw.empty())
     {
         cv::Mat Rwc = mCurrentFrame.mTcw.rowRange(0,3).colRange(0,3).t();
@@ -356,6 +372,17 @@ void Tracking::GrabImage(const sensor_msgs::ImageConstPtr& msg)
 //			-atan2(BaseRcw.at<float>(0,1),BaseRcw.at<float>(0,0))*tmpf);
     }
 
+//    //cout<<"tp10 ";
+//    //Added by wangjing
+//    //for test
+//    cout<<"tracking, current frame Id: "<<mCurrentFrame.mnId<<endl;
+//    if(mpLastKeyFrame)
+//        cout<<"last KF mnId: "<<mpLastKeyFrame->mnId<<endl;
+//    else cout<<"no last KFmnId"<<endl;
+//    if(mpReferenceKF)
+//        cout<<"ref KF mnId: "<<mpReferenceKF->mnId<<endl;
+//    else cout<<"no ref KF"<<endl;
+//    cout<<endl;
 }
 
 
@@ -897,6 +924,8 @@ bool Tracking::Relocalisation()
         vpCandidateKFs.reserve(10);
         vpCandidateKFs = mpLastKeyFrame->GetBestCovisibilityKeyFrames(9);
         vpCandidateKFs.push_back(mpLastKeyFrame);
+
+        cout<<"here? why? ";
     }
 
     if(vpCandidateKFs.empty())

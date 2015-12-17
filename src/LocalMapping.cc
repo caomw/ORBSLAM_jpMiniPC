@@ -49,44 +49,59 @@ void LocalMapping::Run()
     ros::Rate r(500);
     while(ros::ok())
     {
+        cout<<"LnMp- ";
+        cout<<"tp1 ";
+
         // Check if there are keyframes in the queue
         if(CheckNewKeyFrames())
-        {            
+        {
+            cout<<"tp2 ";
             // Tracking will see that Local Mapping is busy
             SetAcceptKeyFrames(false);
 
+            cout<<"tp3 ";
             // BoW conversion and insertion in Map
             ProcessNewKeyFrame();
 
+            cout<<"tp4 ";
             // Check recent MapPoints
             MapPointCulling();
 
+            cout<<"tp5 ";
             // Triangulate new MapPoints
             CreateNewMapPoints();
 
+            cout<<"tp6 ";
             // Find more matches in neighbor keyframes and fuse point duplications
             SearchInNeighbors();
 
+            cout<<"tp7 ";
             mbAbortBA = false;
 
             if(!CheckNewKeyFrames() && !stopRequested())
-            { 
+            {
+                cout<<"tp71 ";
                 // Local BA
                 Optimizer::LocalBundleAdjustment(mpCurrentKeyFrame,&mbAbortBA);
 
+                cout<<"tp72 ";
                 // Check redundant local Keyframes
                 KeyFrameCulling();
 
+                cout<<"tp73 ";
                 mpMap->SetFlagAfterBA();
 
+                cout<<"tp74 ";
                 // Tracking will see Local Mapping idle
                 if(!CheckNewKeyFrames())
                     SetAcceptKeyFrames(true);
             }
 
+            cout<<"tp8 ";
             mpLoopCloser->InsertKeyFrame(mpCurrentKeyFrame);
         }
 
+        cout<<"tp9 ";
         // Safe area to stop
         if(stopRequested())
         {
@@ -100,8 +115,11 @@ void LocalMapping::Run()
             SetAcceptKeyFrames(true);
         }
 
+        cout<<"tp10 ";
         ResetIfRequested();
         r.sleep();
+        cout<<"tp11 ";
+        cout<<endl;
     }
 }
 
