@@ -342,9 +342,13 @@ bool loadKFVariables(KeyFrameDatabase *db, Map *wd, ORBVocabulary* mpvoc,
 		cv::Mat tcwi = Mat::zeros(3, 1, CV_32F);
 		cv::Mat Owi  = Mat::zeros(3, 1, CV_32F);
 
-		ssVar>>nNextId>>mnId>>mnFrameId>>mTimeStamp>>mnTrackReferenceForFrame;
+		ssVar>>nNextId>>mnId>>mnFrameId>>mTimeStamp;
+
+		//To be deleted.
+		ssVar>>mnTrackReferenceForFrame;
 		ssVar>>mnFuseTargetForKF>>mnBALocalForKF>>mnBAFixedForKF>>mnLoopQuery>>mnLoopWords;
 		ssVar>>mLoopScore>>mnRelocQuery>>mnRelocWords>>mRelocScore;
+
 		for(int ti=0;ti<3;ti++)		{
 			for(int tj=0;tj<3;tj++)		{
 				ssVar >> Rcwi.at<float>(ti,tj);	}	}
@@ -374,16 +378,20 @@ bool loadKFVariables(KeyFrameDatabase *db, Map *wd, ORBVocabulary* mpvoc,
 		tmpKF->mnId = mnId;
 		tmpKF->mnFrameId = mnFrameId;
 		tmpKF->mTimeStamp = mTimeStamp;
-		tmpKF->mnTrackReferenceForFrame = mnTrackReferenceForFrame;
-		tmpKF->mnFuseTargetForKF = mnFuseTargetForKF;
-		tmpKF->mnBALocalForKF = mnBALocalForKF;
-		tmpKF->mnBAFixedForKF = mnBAFixedForKF;
-		tmpKF->mnLoopQuery = mnLoopQuery;
-		tmpKF->mnLoopWords = mnLoopWords;
-		tmpKF->mLoopScore = mLoopScore;
-		tmpKF->mnRelocQuery = mnRelocQuery;
-		tmpKF->mnRelocWords = mnRelocWords;
-		tmpKF->mRelocScore = mRelocScore;
+
+		
+		//tmpKF->mnTrackReferenceForFrame = 0;//mnTrackReferenceForFrame;
+		tmpKF->mnFuseTargetForKF = 0;//mnFuseTargetForKF;
+		//tmpKF->mnBALocalForKF = 0;//mnBALocalForKF;
+		//tmpKF->mnBAFixedForKF = 0;//mnBAFixedForKF;
+		//tmpKF->mnLoopQuery = 0;//mnLoopQuery;
+		tmpKF->mnLoopWords = 0;//mnLoopWords;
+		tmpKF->mLoopScore = 0;//mLoopScore;
+		//tmpKF->mnRelocQuery = 0;//mnRelocQuery;
+		tmpKF->mnRelocWords = 0;//mnRelocWords;
+		tmpKF->mRelocScore = 0;//mRelocScore;
+
+		
 		tmpKF->SetPose(Rcwi,tcwi);
 
 		//2 kfKeyPoints.txt
@@ -601,24 +609,24 @@ bool loadMPKFPointers(MapMPIndexPointer &mpIdxPtMap, MapKFIndexPointer &kfIdxPtM
 		//		std::vector<MapPoint*> mvpMapPoints;
 		}
 
-		//after all keyframes loaded
-		//5. kfLoopEdges, load kf id
-		{
-		getline(ifkfLPEGs,slLPEGs);
-		ssLPEGs << slLPEGs;
-		long unsigned int kfmnIdread;
-		size_t nLPEGid;
-		ssLPEGs>>kfmnIdread>>nLPEGid;
-		if(kfmnId!=kfmnIdread) cerr<<"lpeg: kfmnId!=VecKFmnId[linecnt], shouldn't"<<endl;
-		for(size_t i=0;i<nLPEGid;i++)
-		{
-			long unsigned int tkfmnId;
-			ssLPEGs>>tkfmnId;
-			pKF->AddLoopEdge(kfIdxPtMap[tkfmnId]);
-		}
-		//pKF->mspLoopEdges
-		//		std::set<KeyFrame*> mspLoopEdges;
-		}
+//		//after all keyframes loaded
+//		//5. kfLoopEdges, load kf id
+//		{
+//		getline(ifkfLPEGs,slLPEGs);
+//		ssLPEGs << slLPEGs;
+//		long unsigned int kfmnIdread;
+//		size_t nLPEGid;
+//		ssLPEGs>>kfmnIdread>>nLPEGid;
+//		if(kfmnId!=kfmnIdread) cerr<<"lpeg: kfmnId!=VecKFmnId[linecnt], shouldn't"<<endl;
+//		for(size_t i=0;i<nLPEGid;i++)
+//		{
+//			long unsigned int tkfmnId;
+//			ssLPEGs>>tkfmnId;
+//			pKF->AddLoopEdge(kfIdxPtMap[tkfmnId]);
+//		}
+//		//pKF->mspLoopEdges
+//		//		std::set<KeyFrame*> mspLoopEdges;
+//		}
 
 	}
 
@@ -857,6 +865,9 @@ void SaveWorldToFile( Map& World, KeyFrameDatabase& Database)
 			fkfVar << pKFi->mnId <<" ";
 			fkfVar << pKFi->mnFrameId <<" ";
 			fkfVar << pKFi->mTimeStamp <<" ";
+
+			
+			//To be deleted.
 			fkfVar << pKFi->mnTrackReferenceForFrame <<" ";
 			
 			fkfVar << pKFi->mnFuseTargetForKF <<" ";
@@ -869,6 +880,9 @@ void SaveWorldToFile( Map& World, KeyFrameDatabase& Database)
 			fkfVar << pKFi->mnRelocQuery <<" ";
 			fkfVar << pKFi->mnRelocWords <<" ";
 			fkfVar << pKFi->mRelocScore <<" ";
+			//end deleted
+			
+			
 			// protected
 			fkfVar << setprecision(10);
 			cv::Mat Rcwi=pKFi->GetRotation();
