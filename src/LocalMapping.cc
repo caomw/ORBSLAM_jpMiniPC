@@ -46,62 +46,62 @@ void LocalMapping::SetTracker(Tracking *pTracker)
 void LocalMapping::Run()
 {
 
-    ros::Rate r(500);
+    ros::Rate r(5);//(500);
     while(ros::ok())
     {
-        cout<<"LnMp- ";
-        cout<<"tp1 ";
+        //cout<<"LnMp- ";
+        //cout<<"tp1 ";
 
         // Check if there are keyframes in the queue
         if(CheckNewKeyFrames())
         {
-            cout<<"tp2 ";
+            //cout<<"tp2 ";
             // Tracking will see that Local Mapping is busy
             SetAcceptKeyFrames(false);
 
-            cout<<"tp3 ";
+            //cout<<"tp3 ";
             // BoW conversion and insertion in Map
             ProcessNewKeyFrame();
 
-            cout<<"tp4 ";
+            //cout<<"tp4 ";
             // Check recent MapPoints
             MapPointCulling();
 
-            cout<<"tp5 ";
+            //cout<<"tp5 ";
             // Triangulate new MapPoints
             CreateNewMapPoints();
 
-            cout<<"tp6 ";
+            //cout<<"tp6 ";
             // Find more matches in neighbor keyframes and fuse point duplications
             SearchInNeighbors();
 
-            cout<<"tp7 ";
+            //ROS_INFO("tp7 ");
             mbAbortBA = false;
 
             if(!CheckNewKeyFrames() && !stopRequested())
             {
-                cout<<"tp71 ";
+                //ROS_INFO("tp71 ");
                 // Local BA
                 Optimizer::LocalBundleAdjustment(mpCurrentKeyFrame,&mbAbortBA);
 
-                cout<<"tp72 ";
+                ROS_INFO("tp72 ");
                 // Check redundant local Keyframes
                 KeyFrameCulling();
 
-                cout<<"tp73 ";
+                ROS_INFO("tp73 ");
                 mpMap->SetFlagAfterBA();
 
-                cout<<"tp74 ";
+                //ROS_INFO("tp74 ");
                 // Tracking will see Local Mapping idle
                 if(!CheckNewKeyFrames())
                     SetAcceptKeyFrames(true);
             }
 
-            cout<<"tp8 ";
+            //cout<<"tp8 ";
             mpLoopCloser->InsertKeyFrame(mpCurrentKeyFrame);
         }
 
-        cout<<"tp9 ";
+        //cout<<"tp9 ";
         // Safe area to stop
         if(stopRequested())
         {
@@ -115,11 +115,11 @@ void LocalMapping::Run()
             SetAcceptKeyFrames(true);
         }
 
-        cout<<"tp10 ";
+        //cout<<"tp10 ";
         ResetIfRequested();
         r.sleep();
-        cout<<"tp11 ";
-        cout<<endl;
+        //cout<<"tp11 ";
+        //cout<<endl;
     }
 }
 
@@ -546,8 +546,13 @@ void LocalMapping::KeyFrameCulling()
     // in at least other 3 keyframes (in the same or finer scale)
     vector<KeyFrame*> vpLocalKeyFrames = mpCurrentKeyFrame->GetVectorCovisibleKeyFrames();
 
+    ROS_INFO("tp1 ");
+    unsigned int testcnt=0; bool testflag=true;
     for(vector<KeyFrame*>::iterator vit=vpLocalKeyFrames.begin(), vend=vpLocalKeyFrames.end(); vit!=vend; vit++)
     {
+        if(testcnt++>10000 && testflag)
+        {    ROS_INFO("cnt>10000");testflag=false;}
+
         KeyFrame* pKF = *vit;
         if(pKF->mnId==0)
             continue;

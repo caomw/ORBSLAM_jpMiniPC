@@ -31,7 +31,7 @@
 #include<Eigen/StdVector>
 
 #include "Converter.h"
-
+#include <ros/ros.h>
 namespace ORB_SLAM
 {
 
@@ -292,6 +292,8 @@ void Optimizer::LocalBundleAdjustment(KeyFrame *pKF, bool* pbStopFlag)
     lLocalKeyFrames.push_back(pKF);
     pKF->mnBALocalForKF = pKF->mnId;
 
+    //ROS_INFO("tp1 ");
+
     vector<KeyFrame*> vNeighKFs = pKF->GetVectorCovisibleKeyFrames();
     for(int i=0, iend=vNeighKFs.size(); i<iend; i++)
     {
@@ -300,6 +302,8 @@ void Optimizer::LocalBundleAdjustment(KeyFrame *pKF, bool* pbStopFlag)
         if(!pKFi->isBad())
             lLocalKeyFrames.push_back(pKFi);
     }
+
+    //ROS_INFO("tp2 ");
 
     // Local MapPoints seen in Local KeyFrames
     list<MapPoint*> lLocalMapPoints;
@@ -319,6 +323,8 @@ void Optimizer::LocalBundleAdjustment(KeyFrame *pKF, bool* pbStopFlag)
         }
     }
 
+    //ROS_INFO("tp3 ");
+
     // Fixed Keyframes. Keyframes that see Local MapPoints but that are not Local Keyframes
     list<KeyFrame*> lFixedCameras;
     for(list<MapPoint*>::iterator lit=lLocalMapPoints.begin(), lend=lLocalMapPoints.end(); lit!=lend; lit++)
@@ -337,6 +343,8 @@ void Optimizer::LocalBundleAdjustment(KeyFrame *pKF, bool* pbStopFlag)
         }
     }
 
+    //ROS_INFO("tp4 ");
+
     // Setup optimizer
     g2o::SparseOptimizer optimizer;
     g2o::BlockSolverX::LinearSolverType * linearSolver;
@@ -350,6 +358,8 @@ void Optimizer::LocalBundleAdjustment(KeyFrame *pKF, bool* pbStopFlag)
 
     if(pbStopFlag)
         optimizer.setForceStopFlag(pbStopFlag);
+
+    //ROS_INFO("tp5 ");
 
     long unsigned int maxKFid = 0;
 
@@ -366,6 +376,8 @@ void Optimizer::LocalBundleAdjustment(KeyFrame *pKF, bool* pbStopFlag)
             maxKFid=pKFi->mnId;
     }
 
+    //ROS_INFO("tp6 ");
+
     // SET FIXED KEYFRAME VERTICES
     for(list<KeyFrame*>::iterator lit=lFixedCameras.begin(), lend=lFixedCameras.end(); lit!=lend; lit++)
     {
@@ -378,6 +390,8 @@ void Optimizer::LocalBundleAdjustment(KeyFrame *pKF, bool* pbStopFlag)
         if(pKFi->mnId>maxKFid)
             maxKFid=pKFi->mnId;
     }
+
+    //ROS_INFO("tp7 ");
 
     // SET MAP POINT VERTICES
     const int nExpectedSize = (lLocalKeyFrames.size()+lFixedCameras.size())*lLocalMapPoints.size();
@@ -446,8 +460,12 @@ void Optimizer::LocalBundleAdjustment(KeyFrame *pKF, bool* pbStopFlag)
         }
     }
 
+    //cout<<"tp9 ";
+
     optimizer.initializeOptimization();
     optimizer.optimize(5);
+
+    //cout<<"tp10 ";
 
     // Check inlier observations
     for(size_t i=0, iend=vpEdges.size(); i<iend;i++)
@@ -469,6 +487,8 @@ void Optimizer::LocalBundleAdjustment(KeyFrame *pKF, bool* pbStopFlag)
         }
     }
 
+    //cout<<"tp11 ";
+
     // Recover optimized data
 
     //Keyframes
@@ -488,10 +508,14 @@ void Optimizer::LocalBundleAdjustment(KeyFrame *pKF, bool* pbStopFlag)
         pMP->UpdateNormalAndDepth();
     }
 
+    //cout<<"tp12 ";
+
     // Optimize again without the outliers
 
     optimizer.initializeOptimization();
     optimizer.optimize(10);
+
+    //cout<<"tp13 ";
 
     // Check inlier observations
     for(size_t i=0, iend=vpEdges.size(); i<iend;i++)
@@ -513,6 +537,8 @@ void Optimizer::LocalBundleAdjustment(KeyFrame *pKF, bool* pbStopFlag)
             pMP->EraseObservation(pKF);
         }
     }
+
+    //cout<<"tp14 ";
 
     // Recover optimized data
 

@@ -353,7 +353,13 @@ bool loadKFVariables(KeyFrameDatabase *db, Map *wd, ORBVocabulary* mpvoc,
 		for(int ti=0;ti<3;ti++)		{
 			ssVar >> Owi.at<float>(ti);				}
 		if(ssVar.fail())
+        {
 			cerr<<"ssVar fail. shouldn't"<<endl;
+            cout<<Rcwi<<endl;
+            cout<<tcwi<<endl;
+            cout<<Owi<<endl;
+
+        }
 
 
 		//new keyframe from tmp frame
