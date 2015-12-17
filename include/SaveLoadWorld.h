@@ -73,7 +73,7 @@ bool loadMPVariables(KeyFrameDatabase *db, Map *wd, MapMPIndexPointer *mpIdxPtMa
 		return false;
 
 	//save mappoint id in each KF
-	long unsigned int kfSaveCnt,mpSaveCnt;
+	long unsigned int kfSaveCnt,mpSaveCnt,frameNextId,kfNextId;
 	{
 	long unsigned int gnNExtIdMP;
 	string slg;
@@ -81,7 +81,11 @@ bool loadMPVariables(KeyFrameDatabase *db, Map *wd, MapMPIndexPointer *mpIdxPtMa
 	//Line0, MP.nNextId
 	getline(ifGlobal, slg); 
 	ssg<<slg;
-	ssg>>gnNExtIdMP>>mpSaveCnt>>kfSaveCnt;
+	ssg>>gnNExtIdMP>>mpSaveCnt>>kfSaveCnt>>frameNextId>>kfNextId;
+	
+	MapPoint::nNextId = gnNExtIdMP;
+	Frame::nNextId = frameNextId;
+	KeyFrame::nNextId = kfNextId;
 	}
 
 	//record the reference KF's mnId, in the order of lines saved in file
@@ -142,8 +146,6 @@ bool loadMPVariables(KeyFrameDatabase *db, Map *wd, MapMPIndexPointer *mpIdxPtMa
         MapPoint* tmpMP = new MapPoint(mWorldPos, tmpKF, wd);
 
 
-		//static
-		MapPoint::nNextId = nNextId;
 		//public
 		tmpMP->mnId = mnId;
 		tmpMP->mnFirstKFid = mnFirstKFid;
@@ -287,8 +289,6 @@ bool loadKFVariables(KeyFrameDatabase *db, Map *wd, ORBVocabulary* mpvoc,
 
 	// create a temperary Frame, for global or static params of KeyFrames
 	Frame tmpFrame;
-
-	Frame::nNextId = gnNextIdKF+1;	//id of Frame should be larger than KF's id
 	
 	Frame::fx = fx;
 	Frame::fy = fy;
@@ -374,7 +374,6 @@ bool loadKFVariables(KeyFrameDatabase *db, Map *wd, ORBVocabulary* mpvoc,
 			tmpKF = new KeyFrame(tmpFrame, wd, db);
 
 		//evaluate 
-		KeyFrame::nNextId = nNextId;
 		tmpKF->mnId = mnId;
 		tmpKF->mnFrameId = mnFrameId;
 		tmpKF->mTimeStamp = mTimeStamp;
@@ -1046,9 +1045,9 @@ void SaveWorldToFile( Map& World, KeyFrameDatabase& Database)
 	f<<setprecision(10);
 
 	
-	//3 Line0. MP.nNextID, mpSaveCnt, kfSaveCnt
+	//3 Line0. MP.nNextID, mpSaveCnt, kfSaveCnt, Frame::nNextId, KeyFrame::nNextId
 	//3 ------------------------------------------------
-	f<<MapPoint::nNextId<< " "<<mpSaveCnt<<" "<<kfSaveCnt<<" "<<endl;
+	f<<MapPoint::nNextId<< " "<<mpSaveCnt<<" "<<kfSaveCnt<<" "<<Frame::nNextId<<" "<<KeyFrame::nNextId<<" "endl;
 	
 	//KeyFrame data
 	vector<KeyFrame*> vpKFt = World.GetAllKeyFrames();
