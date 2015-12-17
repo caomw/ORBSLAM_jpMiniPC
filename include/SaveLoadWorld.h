@@ -54,9 +54,15 @@ bool LoadWroldFromFile(KeyFrameDatabase *db, Map *wd, ORBVocabulary* mpvoc);
 static bool myOpenFile(ifstream &ifs, string strFile)
 {
 	ifs.open(strFile.c_str());
-	if(!ifs.is_open() || ifs.eof())
+	if(!ifs.is_open())
 	{
 		cout<<strFile<<" open failed."<<endl;
+		return false;
+	}
+	if(ifs.eof())
+	{
+		cout<<strFile<<" empty."<<endl;
+		ifs.close();
 		return false;
 	}
 	return true;
@@ -1165,7 +1171,8 @@ bool LoadWroldFromFile(KeyFrameDatabase *db, Map *wd, ORBVocabulary* mpvoc)
 		Frame::nNextId = frameNextId;
 		KeyFrame::nNextId = kfNextId;
 	}
-
+	ifstream.close();
+	
 	return (ret1&&ret2&&ret3&&ret4);
 }
 
