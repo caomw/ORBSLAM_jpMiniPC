@@ -86,7 +86,7 @@ void Optimizer::BundleAdjustment(const vector<KeyFrame *> &vpKFs, const vector<M
             continue;
         g2o::VertexSBAPointXYZ* vPoint = new g2o::VertexSBAPointXYZ();
         vPoint->setEstimate(Converter::toVector3d(pMP->GetWorldPos()));
-        int id = pMP->mnId+maxKFid+1;	//in case: id of some KF and MP is equal
+        int id = pMP->mnId+maxKFid+1;
         vPoint->setId(id);
         vPoint->setMarginalized(true);
         optimizer.addVertex(vPoint);
@@ -225,6 +225,8 @@ int Optimizer::PoseOptimization(Frame *pFrame)
             e->cx = pFrame->cx;
             e->cy = pFrame->cy;
 
+            e->setLevel(0);
+
             optimizer.addEdge(e);
 
             vpEdges.push_back(e);
@@ -243,7 +245,7 @@ int Optimizer::PoseOptimization(Frame *pFrame)
     int nBad=0;
     for(size_t it=0; it<4; it++)
     {
-        optimizer.initializeOptimization();
+        optimizer.initializeOptimization(0);
         optimizer.optimize(its[it]);
 
         nBad=0;
@@ -254,20 +256,18 @@ int Optimizer::PoseOptimization(Frame *pFrame)
             const size_t idx = vnIndexEdge[i];
 
             if(pFrame->mvbOutlier[idx])
-            {
-                e->setInformation(Eigen::Matrix2d::Identity()*vInvSigmas2[i]);
                 e->computeError();
-            }
 
             if(e->chi2()>chi2[it])
             {                
                 pFrame->mvbOutlier[idx]=true;
-                e->setInformation(Eigen::Matrix2d::Identity()*1e-10);
+                e->setLevel(1);
                 nBad++;
             }
             else if(e->chi2()<=chi2[it])
             {
                 pFrame->mvbOutlier[idx]=false;
+                e->setLevel(0);
             }
         }
 
@@ -283,7 +283,6 @@ int Optimizer::PoseOptimization(Frame *pFrame)
 
     return nInitialCorrespondences-nBad;
 }
-
 
 void Optimizer::LocalBundleAdjustment(KeyFrame *pKF, bool* pbStopFlag)
 {    
@@ -450,10 +449,6 @@ void Optimizer::LocalBundleAdjustment(KeyFrame *pKF, bool* pbStopFlag)
     optimizer.initializeOptimization();
     optimizer.optimize(5);
 
-	//Added by wangjing
-//	cout<<"local BA, robust SUM_chi2: "<<optimizer.activeRobustChi2()/(optimizer.activeEdges().size()+1e-4)<<endl;
-	//
-
     // Check inlier observations
     for(size_t i=0, iend=vpEdges.size(); i<iend;i++)
     {
@@ -497,12 +492,6 @@ void Optimizer::LocalBundleAdjustment(KeyFrame *pKF, bool* pbStopFlag)
 
     optimizer.initializeOptimization();
     optimizer.optimize(10);
-
-
-	//Added by wangjing
-//	cout<<"local BA, robust SUM_chi2(all inlier): "<<optimizer.activeRobustChi2()/(optimizer.activeEdges().size()+1e-4)<<endl;
-	//
-
 
     // Check inlier observations
     for(size_t i=0, iend=vpEdges.size(); i<iend;i++)

@@ -31,8 +31,6 @@
 
 #include<stdint-gcc.h>
 
-//Added by wangjing
-#include <smmintrin.h>
 
 using namespace std;
 
@@ -1802,11 +1800,6 @@ int ORBmatcher::DescriptorDistance(const cv::Mat &a, const cv::Mat &b)
 
     for(int i=0; i<8; i++, pa++, pb++)
     {
-//    	//Added by wangjing
-//    	unsigned  int v = *pa ^ *pb;
-//	dist += _mm_popcnt_u32(v);
-//	//
-
         unsigned  int v = *pa ^ *pb;
         v = v - ((v >> 1) & 0x55555555);
         v = (v & 0x33333333) + ((v >> 2) & 0x33333333);
