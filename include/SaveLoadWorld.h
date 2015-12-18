@@ -87,18 +87,16 @@ bool loadMPVariables(KeyFrameDatabase *db, Map *wd, MapMPIndexPointer *mpIdxPtMa
 	//Line0, MP.nNextId
 	getline(ifGlobal, slg); 
 	ssg<<slg;
-    ssg>>gnNExtIdMP>>mpSaveCnt>>kfSaveCnt;//>>frameNextId>>kfNextId;
+    ssg>>gnNExtIdMP>>mpSaveCnt>>kfSaveCnt>>frameNextId>>kfNextId;
 	
 	MapPoint::nNextId = gnNExtIdMP;
-//	Frame::nNextId = frameNextId;
-//	KeyFrame::nNextId = kfNextId;
+	Frame::nNextId = frameNextId;
+	KeyFrame::nNextId = kfNextId;
 	}
 
 	//record the reference KF's mnId, in the order of lines saved in file
 	VecUL vRefKFIdInMP(mpSaveCnt);
 	VecUL VecMPmnId(mpSaveCnt);
-
-	unsigned long int nNextId;
 
 	Frame tmpFrame;
     tmpFrame.mTcw = Mat::zeros(4,4,CV_32F);
@@ -114,6 +112,7 @@ bool loadMPVariables(KeyFrameDatabase *db, Map *wd, MapMPIndexPointer *mpIdxPtMa
 		ss << sl;
 
 		// plain variables in MapPoint
+		unsigned long int nNextId;
 		long unsigned int mnId, mnTrackReferenceForFrame, mnLastFrameSeen, mnBALocalForKF, mnFuseCandidateForKF;
 		long unsigned int mnLoopPointForKF, mnCorrectedByKF, mnCorrectedReference, mpRefKFId;
 		long int mnFirstKFid;
@@ -147,6 +146,7 @@ bool loadMPVariables(KeyFrameDatabase *db, Map *wd, MapMPIndexPointer *mpIdxPtMa
 		}
 		ss >> mnVisible >> mnFound >> mfMinDistance >> mfMaxDistance >> mpRefKFId;
         if(ss.fail()) cerr<<"ssfail in mpVariables, shouldn't."<<endl;
+		if(mnFirstKFid<0) cerr<<"mnFirstKFid<0, shouldn't."<<endl;
 
 		// new MapPoint memory space and pointer
         MapPoint* tmpMP = new MapPoint(mWorldPos, tmpKF, wd);
@@ -155,26 +155,30 @@ bool loadMPVariables(KeyFrameDatabase *db, Map *wd, MapMPIndexPointer *mpIdxPtMa
 		//public
 		tmpMP->mnId = mnId;
 		tmpMP->mnFirstKFid = mnFirstKFid;
+		
 		tmpMP->mTrackProjX = mTrackProjX;
 		tmpMP->mTrackProjY = mTrackProjY;
 		tmpMP->mbTrackInView = mbTrackInView;
 		tmpMP->mnTrackScaleLevel = mnTrackScaleLevel;
 		tmpMP->mTrackViewCos = mTrackViewCos;
-		tmpMP->mnTrackReferenceForFrame = mnTrackReferenceForFrame;
-		tmpMP->mnLastFrameSeen = mnLastFrameSeen;
-		tmpMP->mnBALocalForKF = mnBALocalForKF;
-		tmpMP->mnFuseCandidateForKF = mnFuseCandidateForKF;
-		tmpMP->mnLoopPointForKF = mnLoopPointForKF;
-		tmpMP->mnCorrectedByKF = mnCorrectedByKF;
-		tmpMP->mnCorrectedReference = mnCorrectedReference;
+		
+		tmpMP->mnTrackReferenceForFrame = 0;//mnTrackReferenceForFrame;
+		tmpMP->mnLastFrameSeen = 0;//mnLastFrameSeen;
+		
+		tmpMP->mnBALocalForKF = 0;//mnBALocalForKF;
+		tmpMP->mnFuseCandidateForKF = 0;//mnFuseCandidateForKF;
+		
+		tmpMP->mnLoopPointForKF = 0;//mnLoopPointForKF;
+		tmpMP->mnCorrectedByKF = 0;//mnCorrectedByKF;
+		tmpMP->mnCorrectedReference = 0;//mnCorrectedReference;
 		//protected
 		tmpMP->SetWorldPos(mWorldPos);
-		tmpMP->SetNormalVec(mNormalVector);
+//		tmpMP->SetNormalVec(mNormalVector);		//set by UpdateNormalAndDepth(). need mObservations/mpRefKF/mWorldPos and KF.Tcw
 		tmpMP->SetDescriptor(mDescriptor);
-		tmpMP->SetmnVisible(mnVisible);
-        tmpMP->SetmnFound(mnFound);
-		tmpMP->SetMinDistance(mfMaxDistance);
-		tmpMP->SetMaxDistance(mfMaxDistance);
+//		tmpMP->SetmnVisible(1);//(mnVisible);
+//      tmpMP->SetmnFound(1);//(mnFound);
+//		tmpMP->SetMinDistance(mfMaxDistance);
+//		tmpMP->SetMaxDistance(mfMaxDistance);
 
 
 		//record reference KF id of this mappoint
@@ -242,48 +246,49 @@ bool loadKFVariables(KeyFrameDatabase *db, Map *wd, ORBVocabulary* mpvoc,
 	{
 	string slg;
 	stringstream ssg;
-	//Line0, MP.nNextId
+	//Line1, MP.nNextId
 	getline(ifGlobal, slg);	
 	ssg<<slg;
-    ssg>>gnNExtIdMP>>mpSaveCnt>>kfSaveCnt;//>>tmp1>>tmp2;
+    ssg>>gnNExtIdMP>>mpSaveCnt>>kfSaveCnt>>tmp1>>tmp2;
 	cout<<"total "<<mpSaveCnt<<" MapPoints saved."<<endl;
 	cout<<"total "<<mpSaveCnt<<" KeyFrames saved."<<endl;
 	VecKFmnId.resize(kfSaveCnt);
-	//Line1, KF.nNextID, mfGridElementWidthInv, mfGridElementHeightInv,fx/fy/cx/cy
+	//Line2, KF.nNextID, mfGridElementWidthInv, mfGridElementHeightInv,fx/fy/cx/cy
 	getline(ifGlobal, slg);	
 	ssg<<slg;
 	ssg>>gnNextIdKF>>mfGridElementWidthInv>>mfGridElementHeightInv>>fx>>fy>>cx>>cy>>mnMinX>>mnMinY>>mnMaxX>>mnMaxY;
-	//Line2, mnScaleLevels(N), N*mvScaleFactors, N*mvLevelSigma2 for the first 2 KFs. 
+	if(gnNextIdKF!=tmp2) cerr<<"2 nNextId of KF is different, shouldn't"<<endl;
+	//Line3, mnScaleLevels(N), N*mvScaleFactors, N*mvLevelSigma2 for the first 2 KFs. 
 	getline(ifGlobal, slg);	
 	ssg<<slg;
-	ssg>>mnScaleLevels0;
+	ssg>>mnScaleLevels0;	cout<<mnScaleLevels0<<" ";
 	mvScaleFactors0.resize(mnScaleLevels0);
 	mvLevelSigma20.resize(mnScaleLevels0);
 	mvInvLevelSigma20.resize(mnScaleLevels0);
 	for(int i=0;i<mnScaleLevels0;i++)
 	{
-		ssg>>mvScaleFactors0[i];
+		ssg>>mvScaleFactors0[i];		cout<<mvScaleFactors0[i]<<" ";
 	}
 	for(int i=0;i<mnScaleLevels0;i++)
 	{
-		ssg>>mvLevelSigma20[i];
-		mvInvLevelSigma20[i]=1/mvLevelSigma20[i];
+		ssg>>mvLevelSigma20[i];			cout<<mvLevelSigma20[i]<<" ";
+		mvInvLevelSigma20[i]=1/mvLevelSigma20[i];	cout<<mvInvLevelSigma20[i]<<" ";
 	}
-	//Line3, mnScaleLevels(N), N*mvScaleFactors, N*mvLevelSigma2 for other KFs. 
+	//Line4, mnScaleLevels(N), N*mvScaleFactors, N*mvLevelSigma2 for other KFs. 
 	getline(ifGlobal, slg);
 	ssg<<slg;
-	ssg>>mnScaleLevelsOther;
+	ssg>>mnScaleLevelsOther;	cout<<mnScaleLevelsOther<<endl;
 	mvScaleFactorsOther.resize(mnScaleLevelsOther);
 	mvLevelSigma2Other.resize(mnScaleLevelsOther);
 	mvInvLevelSigma2Other.resize(mnScaleLevelsOther);
 	for(int i=0;i<mnScaleLevelsOther;i++)
 	{
-		ssg>>mvScaleFactorsOther[i];
+		ssg>>mvScaleFactorsOther[i];		cout<<mvScaleFactorsOther[i]<<" ";
 	}
 	for(int i=0;i<mnScaleLevelsOther;i++)
 	{
-		ssg>>mvLevelSigma2Other[i];
-		mvInvLevelSigma2Other[i]=1/mvLevelSigma2Other[i];
+		ssg>>mvLevelSigma2Other[i];			cout<<mvLevelSigma2Other[i]<<" ";
+		mvInvLevelSigma2Other[i]=1/mvLevelSigma2Other[i];	cout<<mvInvLevelSigma2Other[i]<<" ";
 	}
 	if(ssg.fail())
 		cerr<<"ssg fail. shouldn't"<<endl;
@@ -383,33 +388,24 @@ bool loadKFVariables(KeyFrameDatabase *db, Map *wd, ORBVocabulary* mpvoc,
 		tmpKF->mnFrameId = mnFrameId;
 		tmpKF->mTimeStamp = mTimeStamp;
 
-		
-        tmpKF->mnTrackReferenceForFrame = mnTrackReferenceForFrame;
-        tmpKF->mnFuseTargetForKF = mnFuseTargetForKF;
-        tmpKF->mnBALocalForKF = mnBALocalForKF;
-        tmpKF->mnBAFixedForKF = mnBAFixedForKF;
-        tmpKF->mnLoopQuery = mnLoopQuery;
-        tmpKF->mnLoopWords = mnLoopWords;
-        tmpKF->mLoopScore = mLoopScore;
-        tmpKF->mnRelocQuery = mnRelocQuery;
-        tmpKF->mnRelocWords = mnRelocWords;
-        tmpKF->mRelocScore = mRelocScore;
 
-//        //tmpKF->mnTrackReferenceForFrame = 0;//mnTrackReferenceForFrame;
-//		tmpKF->mnFuseTargetForKF = 0;//mnFuseTargetForKF;
-//		//tmpKF->mnBALocalForKF = 0;//mnBALocalForKF;
-//		//tmpKF->mnBAFixedForKF = 0;//mnBAFixedForKF;
-//		//tmpKF->mnLoopQuery = 0;//mnLoopQuery;
-//		tmpKF->mnLoopWords = 0;//mnLoopWords;
-//		tmpKF->mLoopScore = 0;//mLoopScore;
-//		//tmpKF->mnRelocQuery = 0;//mnRelocQuery;
-//		tmpKF->mnRelocWords = 0;//mnRelocWords;
-//		tmpKF->mRelocScore = 0;//mRelocScore;
+        tmpKF->mnTrackReferenceForFrame = 0;//mnTrackReferenceForFrame;
+		tmpKF->mnFuseTargetForKF = 0;//mnFuseTargetForKF;
+		tmpKF->mnBALocalForKF = 0;//mnBALocalForKF;
+		tmpKF->mnBAFixedForKF = 0;//mnBAFixedForKF;
+		tmpKF->mnLoopQuery = 0;//mnLoopQuery;
+		tmpKF->mnLoopWords = 0;//mnLoopWords;
+		tmpKF->mLoopScore = 0;//mLoopScore;
+		tmpKF->mnRelocQuery = 0;//mnRelocQuery;
+		tmpKF->mnRelocWords = 0;//mnRelocWords;
+		tmpKF->mRelocScore = 0;//mRelocScore;
 		
 		tmpKF->SetPose(Rcwi,tcwi);
 
 		//2 kfKeyPoints.txt
 		{
+		//		fkfKeys << kpi.pt.x <<" "<< kpi.pt.y <<" "<< kpi.size <<" "<< kpi.angle <<" ";
+		//		fkfKeys << kpi.response << " " << kpi.octave << " " << kpi.class_id <<" ";
 		getline(ifkfKeys,slKeys);
 		ssKeys << slKeys;
 		size_t kpn;
@@ -537,15 +533,15 @@ bool loadMPKFPointers(MapMPIndexPointer &mpIdxPtMap, MapKFIndexPointer &kfIdxPtM
 	{	
 		return false;
 	}
-	string slg,slMPids,slLPEGs,slObs;
-	stringstream ssg,ssMPids,ssLPEGs,ssObs;
 	
     long unsigned int mpSaveCnt,kfSaveCnt,tmp1,tmp2;
 	{
+	string slg;
+	stringstream ssg;
 	long unsigned int gnNExtIdMP;
 	getline(ifGlobal,slg);
 	ssg << slg;
-    ssg>>gnNExtIdMP>>mpSaveCnt>>kfSaveCnt;//>>tmp1>>tmp2;
+    ssg>>gnNExtIdMP>>mpSaveCnt>>kfSaveCnt>>tmp1>>tmp2;
     if(ssg.fail()) cerr<<"ssg fail in loadMPKFPointers, shouldn't."<<endl;
 	}
 
@@ -563,6 +559,8 @@ bool loadMPKFPointers(MapMPIndexPointer &mpIdxPtMap, MapKFIndexPointer &kfIdxPtM
 		//	tmpMP.mpRefKF;
 
 		// observation data
+		string slObs;
+		stringstream ssObs;
 		getline(ifmpObs, slObs);
 		ssObs<<slObs;
 		size_t obN;
@@ -592,6 +590,8 @@ bool loadMPKFPointers(MapMPIndexPointer &mpIdxPtMap, MapKFIndexPointer &kfIdxPtM
 		//after all mappoints loaded
 		//4. kfMapPointsID, for pKF->mvpMapPoints
 		{
+		string slMPids;
+		stringstream ssMPids;
 		getline(ifkfMPids,slMPids);
 		ssMPids << slMPids;
 		size_t nMPid,tvpMPidx;
@@ -620,6 +620,8 @@ bool loadMPKFPointers(MapMPIndexPointer &mpIdxPtMap, MapKFIndexPointer &kfIdxPtM
         //after all keyframes loaded
         //5. kfLoopEdges, load kf id
         {
+		string slLPEGs;
+		stringstream ssLPEGs;
         getline(ifkfLPEGs,slLPEGs);
         ssLPEGs << slLPEGs;
         long unsigned int kfmnIdread;
@@ -641,10 +643,18 @@ bool loadMPKFPointers(MapMPIndexPointer &mpIdxPtMap, MapKFIndexPointer &kfIdxPtM
 
 	
 	//after all keyframes and mappoints loaded
+	
+	//build spanning tree. in increasing order of KeyFrame mnId
+	{
+	unsigned long int preidx=0;
 	for(MapKFIndexPointer::iterator mit=kfIdxPtMap.begin(), mend=kfIdxPtMap.end(); mit!=mend; mit++)
 	{
 		KeyFrame* pKFm=mit->second;
 		pKFm->UpdateConnections();
+		if(preidx>pKFm->mnId)
+			cerr<<"KeyFrame pre Id > cur Id, shouldn't."<<endl;
+		preidx=pKFm->mnId;
+	}
 	}
 	//		std::map<KeyFrame*,int> mConnectedKeyFrameWeights;
 	//		std::vector<KeyFrame*> mvpOrderedConnectedKeyFrames;
@@ -652,6 +662,19 @@ bool loadMPKFPointers(MapMPIndexPointer &mpIdxPtMap, MapKFIndexPointer &kfIdxPtM
 	//		KeyFrame* mpParent;
 	//		std::set<KeyFrame*> mspChildrens;
 
+	//UpdateNormalAndDepth, need the mObservations/mpRefKF/mWorldPos
+	{
+	unsigned long int preidxmp=0;
+	for(MapMPIndexPointer::iterator mit=mpIdxPtMap.begin(), mend=mpIdxPtMap.end(); mit!=mend; mit++)
+	{
+		MapPoint* pMPm=mit->second;
+		pMPm->UpdateNormalAndDepth();
+		if(preidxmp>pMPm->mnId)
+			cerr<<"MapPoint pre Id > cur Id, shouldn't."<<endl;
+		preidxmp=pMPm->mnId;
+	}
+	}
+	
 	ifkfMPids.close();
 	ifkfLPEGs.close();
 	ifmpObs.close();
@@ -749,21 +772,26 @@ void SaveWorldToFile( Map& World, KeyFrameDatabase& Database)
     for(std::vector<MapPoint*>::iterator vit=vMapPoints.begin(), vend=vMapPoints.end(); vit!=vend; vit++, tmpIdx++)
 	{
 		MapPoint* pMPi = *vit;
+		if(!pMPi)
+			cerr<<"MapPoint pointer = NULL. shouldn't"<<endl;
 		if(!pMPi->isBad())	//only save those not bad
 		{
 			//2 2.1 save plain variable
 			//2 ---------------------------
 			// public, 15
+			{
 			fmpVar << pMPi->nNextId << " ";
 			fmpVar << pMPi->mnId << " ";
 			fmpVar << pMPi->mnFirstKFid << " ";
 			fmpVar << pMPi->mTrackProjX << " ";
 			fmpVar << pMPi->mTrackProjY << " ";
+			
 			fmpVar << pMPi->mbTrackInView << " ";
 			fmpVar << pMPi->mnTrackScaleLevel << " ";
 			fmpVar << pMPi->mTrackViewCos << " ";
 			fmpVar << pMPi->mnTrackReferenceForFrame << " ";
 			fmpVar << pMPi->mnLastFrameSeen << " ";
+			
 			fmpVar << pMPi->mnBALocalForKF << " ";
 			fmpVar << pMPi->mnFuseCandidateForKF << " ";
 			fmpVar << pMPi->mnLoopPointForKF << " ";
@@ -788,11 +816,13 @@ void SaveWorldToFile( Map& World, KeyFrameDatabase& Database)
 			fmpVar << pMPi->GetMaxDistanceInvariance() <<" ";
 			fmpVar << pMPi->GetReferenceKeyFrame()->mnId <<" ";
 			fmpVar << std::endl;
+			}
 			//2 ---------------------------
 
 
 			//2 2.2 save observations
 			//2 ---------------------------
+			{
 			map<KeyFrame*,size_t> observations = pMPi->GetObservations();
 			int nObs = observations.size();
 			fmpObs << nObs << " ";	//total number 
@@ -804,6 +834,7 @@ void SaveWorldToFile( Map& World, KeyFrameDatabase& Database)
 			}
 
 			fmpObs << std::endl;
+			}
 			//2 ---------------------------
 
 			mpSaveCnt++;
@@ -863,6 +894,8 @@ void SaveWorldToFile( Map& World, KeyFrameDatabase& Database)
 	for(std::vector<KeyFrame*>::iterator vitKFs=vKeyFrames.begin(), vendKFs=vKeyFrames.end(); vitKFs!=vendKFs; vitKFs++, tmpIdx++)
 	{
 		KeyFrame* pKFi = *vitKFs;
+		if(!pKFi)
+			cerr<<"KeyFrame pointer = NULL, shouldn't."<<endl;
 		if(!pKFi->isBad())
 		{
 			//2 3.1 save plain variables
@@ -916,6 +949,7 @@ void SaveWorldToFile( Map& World, KeyFrameDatabase& Database)
 
 			//2 3.2 save KeyPoints and KeyPointsUn
 			//2 -------------------------------
+			{
 			vector<cv::KeyPoint> mvKeysi = pKFi->GetKeyPoints();
 			fkfKeys << mvKeysi.size() <<" ";
 
@@ -926,7 +960,8 @@ void SaveWorldToFile( Map& World, KeyFrameDatabase& Database)
 				fkfKeys << kpi.response << " " << kpi.octave << " " << kpi.class_id <<" ";
 			}
 			fkfKeys <<endl;
-			
+			}
+			{
 			vector<cv::KeyPoint> mvKeysiUn = pKFi->GetKeyPointsUn();
 			fkfKeysUn << mvKeysiUn.size() <<" ";
 			for(vector<cv::KeyPoint>::iterator vitkeysun=mvKeysiUn.begin(), vendkeysun=mvKeysiUn.end(); vitkeysun!=vendkeysun; vitkeysun++)
@@ -936,10 +971,12 @@ void SaveWorldToFile( Map& World, KeyFrameDatabase& Database)
 				fkfKeysUn << kpi.response << " " << kpi.octave << " " << kpi.class_id <<" ";
 			}
 			fkfKeysUn <<endl;
+			}
 			//2 -------------------------------
 
 			//2 3.3 save descriptors
 			//2 -------------------------------
+			{
 			cv::Mat descriptorsi = pKFi->GetDescriptors();
 			int desnumi = descriptorsi.rows;
 			fkfDes << desnumi <<" ";	//number of descriptors
@@ -953,19 +990,24 @@ void SaveWorldToFile( Map& World, KeyFrameDatabase& Database)
 				}
 			}
 			fkfDes <<endl;
+			}
 			//2 -------------------------------
 
 
 			//2 3.4 save mappoint id
 			//2 -------------------------------
-            vector<MapPoint*> vpsi = pKFi->GetMapPointMatches();
+			{
+			vector<MapPoint*> vpsi = pKFi->GetMapPointMatches();
             size_t nMPcnt=0;
             //compute valid mappoint number
 			for(size_t mvpMPidx=0, iend=vpsi.size();mvpMPidx<iend;mvpMPidx++)
 			{
 				MapPoint* vit = vpsi[mvpMPidx];
-                if(!vit || vit->isBad()) continue;
-                nMPcnt++;
+                if(vit)
+					if(!vit->isBad()) 
+            		{
+            			nMPcnt++;
+					}
 			}
 
             fkfMPids << pKFi->mnId << " "<<nMPcnt <<" ";	//mnId & number of mappoints
@@ -973,18 +1015,23 @@ void SaveWorldToFile( Map& World, KeyFrameDatabase& Database)
             for(size_t mvpMPidx=0, iend=vpsi.size();mvpMPidx<iend;mvpMPidx++)
             {
                 MapPoint* vit = vpsi[mvpMPidx];
-                if(!vit || vit->isBad()) continue;
-                fkfMPids << vit->mnId <<" "<<mvpMPidx<<" ";
-                scnt++;
+				if(vit)
+					if(!vit->isBad())
+					{
+		                fkfMPids << vit->mnId <<" "<<mvpMPidx<<" ";
+		                scnt++;
+					}
             }
 			fkfMPids <<endl;
-			if(scnt!=pKFi->GetMapPoints().size())
+			if(scnt!=pKFi->GetMapPoints().size() || scnt!=nMPcnt)
 				cerr<<"scnt!=pKFi->GetMapPoints().size(), shouldn't"<<endl;
+			}
 			//2 -------------------------------
 
 			
 			//2 3.5 save loopedges
 			//2 -------------------------------
+			{
 			set<KeyFrame*> lpedges = pKFi->GetLoopEdges();
 			size_t nlpegs = lpedges.size();
 			fkfLPEGs << pKFi->mnId << " "<<nlpegs<<" ";
@@ -997,31 +1044,32 @@ void SaveWorldToFile( Map& World, KeyFrameDatabase& Database)
 				}
 			}
 			fkfLPEGs <<endl;
+			}
 			//2 -------------------------------
 			
-			//3 xxx. for test
-			if(printflag && tmpIdx>=4)
-			{
-				cout<<"print for test"<<endl;
-				for(int ti=0;ti<3;ti++)
-				{
-					for(int tj=0;tj<3;tj++) 				
-						cout << Rcwi.at<float>(ti,tj) <<" ";
-					cout<<endl;
-				}
-				for(int ti=0;ti<3;ti++)
-					cout<<tcwi.at<float>(ti)<<" ";
-				cout<<endl;
-				cout<<"Pose Tcw: "<<pKFi->GetPose()<<endl;
+//			//3 xxx. for test
+//			if(printflag && tmpIdx>=4)
+//			{
+//				cout<<"print for test"<<endl;
+//				for(int ti=0;ti<3;ti++)
+//				{
+//					for(int tj=0;tj<3;tj++) 				
+//						cout << Rcwi.at<float>(ti,tj) <<" ";
+//					cout<<endl;
+//				}
+//				for(int ti=0;ti<3;ti++)
+//					cout<<tcwi.at<float>(ti)<<" ";
+//				cout<<endl;
+//				cout<<"Pose Tcw: "<<pKFi->GetPose()<<endl;
 
-				const unsigned char *tp = descriptorsi.row(0).ptr();
-				for(int ti=0;ti<32;ti++)
-					cout<<(int)tp[ti]<<" ";
-				cout<<endl;
-				cout<<"descriptor0/0: "<<descriptorsi.row(0)<<endl;
-				
-				printflag=false;
-			}
+//				const unsigned char *tp = descriptorsi.row(0).ptr();
+//				for(int ti=0;ti<32;ti++)
+//					cout<<(int)tp[ti]<<" ";
+//				cout<<endl;
+//				cout<<"descriptor0/0: "<<descriptorsi.row(0)<<endl;
+//				
+//				printflag=false;
+//			}
 
 			kfSaveCnt++;
 			
@@ -1054,7 +1102,7 @@ void SaveWorldToFile( Map& World, KeyFrameDatabase& Database)
 	f<<setprecision(10);
 
 	
-	//3 Line0. MP.nNextID, mpSaveCnt, kfSaveCnt, Frame::nNextId, KeyFrame::nNextId
+	//3 Line1. MP.nNextID, mpSaveCnt, kfSaveCnt, Frame::nNextId, KeyFrame::nNextId
 	//3 ------------------------------------------------
     f<<MapPoint::nNextId<< " "<<mpSaveCnt<<" "<<kfSaveCnt<<" "<<Frame::nNextId<<" "<<KeyFrame::nNextId<<" "<<endl;
 	
@@ -1063,7 +1111,7 @@ void SaveWorldToFile( Map& World, KeyFrameDatabase& Database)
 	KeyFrame* pKF0 = vpKFt[0];
 	//3 ------------------------------------------------
 	
-	//3 Line1.  KF.nNextID, mfGridElementWidthInv, mfGridElementHeightInv,fx/fy/cx/cy,
+	//3 Line2.  KF.nNextID, mfGridElementWidthInv, mfGridElementHeightInv,fx/fy/cx/cy,
 	//3 (cont.) mnMinX,mnMinY,mnMaxX,mnMaxY,mK
 	//3 ------------------------------------------------
 	f<<KeyFrame::nNextId<<" ";
@@ -1074,7 +1122,7 @@ void SaveWorldToFile( Map& World, KeyFrameDatabase& Database)
 	f<<endl;
 	//3 ------------------------------------------------
 	
-	//3 Line2. mnScaleLevels(N), N*mvScaleFactors, N*mvLevelSigma2 for the first 2 KFs. 
+	//3 Line3. mnScaleLevels(N), N*mvScaleFactors, N*mvLevelSigma2 for the first 2 KFs. 
 	//3 ------------------------------------------------
 	f<<pKF0->GetScaleLevels()<<" ";
 	vector<float> sfactors =  pKF0->GetScaleFactors();
@@ -1086,7 +1134,7 @@ void SaveWorldToFile( Map& World, KeyFrameDatabase& Database)
 	f<<endl; 
 	//3 ------------------------------------------------
 	
-	//3 Line3. mnScaleLevels(N), N*mvScaleFactors, N*mvLevelSigma2 for other KFs. 
+	//3 Line4. mnScaleLevels(N), N*mvScaleFactors, N*mvLevelSigma2 for other KFs. 
 	//3 ------------------------------------------------
     KeyFrame* pKFg=static_cast<KeyFrame*>(NULL);
 	for(vector<KeyFrame*>::iterator kfit=vpKFt.begin(), kfend=vpKFt.end(); kfit!=kfend; kfit++)
@@ -1106,11 +1154,11 @@ void SaveWorldToFile( Map& World, KeyFrameDatabase& Database)
         f<<lsigma2g[i]<<" ";
 	f<<endl;
 	//3 ------------------------------------------------
-	//1 ------------------------------------------------
 
 	
 	f.close();
 	}
+	//1 ------------------------------------------------
 
 }
 
