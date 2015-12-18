@@ -46,7 +46,7 @@ void LocalMapping::SetTracker(Tracking *pTracker)
 void LocalMapping::Run()
 {
 
-    ros::Rate r(5);//(500);
+    ros::Rate r(500);
     while(ros::ok())
     {
         //cout<<"LnMp- ";
@@ -84,11 +84,11 @@ void LocalMapping::Run()
                 // Local BA
                 Optimizer::LocalBundleAdjustment(mpCurrentKeyFrame,&mbAbortBA);
 
-                ROS_INFO("tp72 ");
+                //ROS_INFO("tp72 ");
                 // Check redundant local Keyframes
                 KeyFrameCulling();
 
-                ROS_INFO("tp73 ");
+                //ROS_INFO("tp73 ");
                 mpMap->SetFlagAfterBA();
 
                 //ROS_INFO("tp74 ");
@@ -546,12 +546,12 @@ void LocalMapping::KeyFrameCulling()
     // in at least other 3 keyframes (in the same or finer scale)
     vector<KeyFrame*> vpLocalKeyFrames = mpCurrentKeyFrame->GetVectorCovisibleKeyFrames();
 
-    ROS_INFO("tp1 ");
-    unsigned int testcnt=0; bool testflag=true;
+    //ROS_INFO("tp1 ");
+//    unsigned int testcnt=0; bool testflag=true;
     for(vector<KeyFrame*>::iterator vit=vpLocalKeyFrames.begin(), vend=vpLocalKeyFrames.end(); vit!=vend; vit++)
     {
-        if(testcnt++>10000 && testflag)
-        {    ROS_INFO("cnt>10000");testflag=false;}
+//        if(testcnt++>10000 && testflag)
+//        {    ROS_INFO("cnt>10000");testflag=false;}
 
         KeyFrame* pKF = *vit;
         if(pKF->mnId==0)

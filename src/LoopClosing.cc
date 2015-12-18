@@ -56,28 +56,28 @@ void LoopClosing::SetLocalMapper(LocalMapping *pLocalMapper)
 void LoopClosing::Run()
 {
 
-//    ros::Rate r(200);
+    ros::Rate r(200);
 
-//    while(ros::ok())
-//    {
-//        // Check if there are keyframes in the queue
-//        if(CheckNewKeyFrames())
-//        {
-//            // Detect loop candidates and check covisibility consistency
-//            if(DetectLoop())
-//            {
-//               // Compute similarity transformation [sR|t]
-//               if(ComputeSim3())
-//               {
-//                   // Perform loop fusion and pose graph optimization
-//                   CorrectLoop();
-//               }
-//            }
-//        }
+    while(ros::ok())
+    {
+        // Check if there are keyframes in the queue
+        if(CheckNewKeyFrames())
+        {
+            // Detect loop candidates and check covisibility consistency
+            if(DetectLoop())
+            {
+               // Compute similarity transformation [sR|t]
+               if(ComputeSim3())
+               {
+                   // Perform loop fusion and pose graph optimization
+                   CorrectLoop();
+               }
+            }
+        }
 
-//        ResetIfRequested();
-//        r.sleep();
-//    }
+        ResetIfRequested();
+        r.sleep();
+    }
 }
 
 void LoopClosing::InsertKeyFrame(KeyFrame *pKF)

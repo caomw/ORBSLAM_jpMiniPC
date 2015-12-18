@@ -146,7 +146,7 @@ bool loadMPVariables(KeyFrameDatabase *db, Map *wd, MapMPIndexPointer *mpIdxPtMa
 			tpdes[i] = tmpi;
 		}
 		ss >> mnVisible >> mnFound >> mfMinDistance >> mfMaxDistance >> mpRefKFId;
-
+        if(ss.fail()) cerr<<"ssfail in mpVariables, shouldn't."<<endl;
 
 		// new MapPoint memory space and pointer
         MapPoint* tmpMP = new MapPoint(mWorldPos, tmpKF, wd);
@@ -218,8 +218,6 @@ bool loadMPVariables(KeyFrameDatabase *db, Map *wd, MapMPIndexPointer *mpIdxPtMa
 bool loadKFVariables(KeyFrameDatabase *db, Map *wd, ORBVocabulary* mpvoc,
 	MapKFIndexPointer *kfIdxPtMap, VecUL &_VecKFmnId)
 {
-    bool debugflag=true;
-
 	ifstream ifkfVar,ifkfKeys,ifkfKeysUn,ifkfDes,ifGlobal;
 	if(	!myOpenFile(ifkfVar,	string(ros::package::getPath("ORB_SLAM")+"/tmp/"+"kfVariables.txt")) 	||
 		!myOpenFile(ifkfKeys,	string(ros::package::getPath("ORB_SLAM")+"/tmp/"+"kfKeyPoints.txt")) 	||
@@ -231,7 +229,7 @@ bool loadKFVariables(KeyFrameDatabase *db, Map *wd, ORBVocabulary* mpvoc,
 	}
 
 	//save mappoint id in each KF
-	long unsigned int kfSaveCnt,mpSaveCnt;
+    long unsigned int kfSaveCnt,mpSaveCnt,tmp1,tmp2;
     VecUL VecKFmnId;
 
 	long unsigned int gnNextIdKF,gnNExtIdMP;
@@ -247,7 +245,7 @@ bool loadKFVariables(KeyFrameDatabase *db, Map *wd, ORBVocabulary* mpvoc,
 	//Line0, MP.nNextId
 	getline(ifGlobal, slg);	
 	ssg<<slg;
-	ssg>>gnNExtIdMP>>mpSaveCnt>>kfSaveCnt;
+    ssg>>gnNExtIdMP>>mpSaveCnt>>kfSaveCnt>>tmp1>>tmp2;
 	cout<<"total "<<mpSaveCnt<<" MapPoints saved."<<endl;
 	cout<<"total "<<mpSaveCnt<<" KeyFrames saved."<<endl;
 	VecKFmnId.resize(kfSaveCnt);
@@ -412,10 +410,7 @@ bool loadKFVariables(KeyFrameDatabase *db, Map *wd, ORBVocabulary* mpvoc,
 			int octave,classid;
 			ssKeys >> ptx>>pty>>size>>angle>>response>>octave>>classid;
 			*vit = cv::KeyPoint(ptx,pty,size,angle,response,octave,classid);
-			if(ssKeys.fail())
-            {if(debugflag)
-                cerr<<"loopcnt: "<<skfcnt<<" mnId "<<mnId<<" ssKeys fail. shouldn't"<<endl;
-                debugflag=false;}
+            if(ssKeys.fail())  cerr<<"loopcnt: "<<skfcnt<<" mnId "<<mnId<<" ssKeys fail. shouldn't"<<endl;
 		}
 		tmpKF->SetKeyPoints(tmvKeys);
 //		std::vector<cv::KeyPoint> mvKeys;
@@ -523,7 +518,6 @@ bool loadKFVariables(KeyFrameDatabase *db, Map *wd, ORBVocabulary* mpvoc,
 bool loadMPKFPointers(MapMPIndexPointer &mpIdxPtMap, MapKFIndexPointer &kfIdxPtMap,
 		const VecUL& VecKFmnId, const VecUL& VecMPmnId, const VecUL &vRefKFIdInMP)
 {
-    bool debugflag=true;
 	ifstream ifkfMPids,ifkfLPEGs,ifGlobal,ifmpObs;
 	if(	!myOpenFile(ifkfMPids,	string(ros::package::getPath("ORB_SLAM")+"/tmp/"+"kfMapPointsID.txt"))	||
 		!myOpenFile(ifkfLPEGs,	string(ros::package::getPath("ORB_SLAM")+"/tmp/"+"kfLoopEdges.txt"))   	||
@@ -535,12 +529,13 @@ bool loadMPKFPointers(MapMPIndexPointer &mpIdxPtMap, MapKFIndexPointer &kfIdxPtM
 	string slg,slMPids,slLPEGs,slObs;
 	stringstream ssg,ssMPids,ssLPEGs,ssObs;
 	
-	long unsigned int mpSaveCnt,kfSaveCnt;
+    long unsigned int mpSaveCnt,kfSaveCnt,tmp1,tmp2;
 	{
 	long unsigned int gnNExtIdMP;
 	getline(ifGlobal,slg);
 	ssg << slg;
-	ssg>>gnNExtIdMP>>mpSaveCnt>>kfSaveCnt;
+    ssg>>gnNExtIdMP>>mpSaveCnt>>kfSaveCnt>>tmp1>>tmp2;
+    if(ssg.fail()) cerr<<"ssg fail in loadMPKFPointers, shouldn't."<<endl;
 	}
 
 	//------------------------------
@@ -569,6 +564,7 @@ bool loadMPKFPointers(MapMPIndexPointer &mpIdxPtMap, MapKFIndexPointer &kfIdxPtM
 			KeyFrame* pKF = kfIdxPtMap[kfIdj];	//KF
             pMP->AddObservation(pKF,obIdj);		//add observation
 		}
+        if(ssObs.fail()) cerr<<"ssObs fail, shouldn't."<<endl;
 		//tmpMP.mObservations;
 	}
 
@@ -604,11 +600,7 @@ bool loadMPKFPointers(MapMPIndexPointer &mpIdxPtMap, MapKFIndexPointer &kfIdxPtM
 			pKF->AddMapPoint(pMP,tvpMPidx);
             if((int)tvpMPidx!=pMP->GetIndexInKeyFrame(pKF))
 				cerr<<tvpMPidx<<" "<<pMP->GetIndexInKeyFrame(pKF)<<"\ntvpMPidx!=pMP->GetIndexInKeyFrame(pKF), shouldn't"<<endl;
-            if(ssMPids.fail() && debugflag)
-            {
-                cerr<<"kfmnId:"<<kfmnId<<" linecnt: "<<linecnt<<"ssMPids fail. shouldn't"<<endl;
-                debugflag=false;
-            }
+            if(ssMPids.fail()) cerr<<"kfmnId:"<<kfmnId<<" linecnt: "<<linecnt<<"ssMPids fail. shouldn't"<<endl;
 		}
 		//pKF->mvpMapPoints
 		//		std::vector<MapPoint*> mvpMapPoints;
@@ -1053,7 +1045,7 @@ void SaveWorldToFile( Map& World, KeyFrameDatabase& Database)
 	
 	//3 Line0. MP.nNextID, mpSaveCnt, kfSaveCnt, Frame::nNextId, KeyFrame::nNextId
 	//3 ------------------------------------------------
-	f<<MapPoint::nNextId<< " "<<mpSaveCnt<<" "<<kfSaveCnt<<" "<<Frame::nNextId<<" "<<KeyFrame::nNextId<<" "endl;
+    f<<MapPoint::nNextId<< " "<<mpSaveCnt<<" "<<kfSaveCnt<<" "<<Frame::nNextId<<" "<<KeyFrame::nNextId<<" "<<endl;
 	
 	//KeyFrame data
 	vector<KeyFrame*> vpKFt = World.GetAllKeyFrames();
@@ -1158,7 +1150,7 @@ bool LoadWroldFromFile(KeyFrameDatabase *db, Map *wd, ORBVocabulary* mpvoc)
 
 	//evaluate nNextId for Frame/MapPoint/KeyFrame
 	ifstream ifGlobal;
-	ret4 = myOpenFile(ifGlobal,	string(ros::package::getPath("ORB_SLAM")+"/tmp/"+"GlobalParams.txt"))
+    ret4 = myOpenFile(ifGlobal,	string(ros::package::getPath("ORB_SLAM")+"/tmp/"+"GlobalParams.txt"));
 	if(ret4)
 	{
 		long unsigned int gnNExtIdMP,kfSaveCnt,mpSaveCnt,frameNextId,kfNextId;
@@ -1171,7 +1163,7 @@ bool LoadWroldFromFile(KeyFrameDatabase *db, Map *wd, ORBVocabulary* mpvoc)
 		Frame::nNextId = frameNextId;
 		KeyFrame::nNextId = kfNextId;
 	}
-	ifstream.close();
+    ifGlobal.close();
 	
 	return (ret1&&ret2&&ret3&&ret4);
 }
