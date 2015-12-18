@@ -135,6 +135,15 @@ public:
     // Median MapPoint depth
     float ComputeSceneMedianDepth(int q = 2);
 
+	//Added by wangjing
+	vector<int> GetMinMaxXY(void)	{	
+        vector<int> tv(4); tv[0]=mnMinX;tv[1]=mnMinY;tv[2]=mnMaxX;tv[3]=mnMaxY;
+        return tv;	}
+	void SetKeyPoints(vector<cv::KeyPoint> vkps) {mvKeys = vkps;};
+	void SetKeyPointsUn(vector<cv::KeyPoint> vkpsun) {mvKeysUn = vkpsun;};
+	void SetDescriptors(cv::Mat des)	{mDescriptors = des.clone();};
+	void SetmvpMapPoints(vector<MapPoint*> _vmps) {mvpMapPoints = _vmps;};
+	
 public:
     static long unsigned int nNextId;
     long unsigned int mnId;

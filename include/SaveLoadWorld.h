@@ -1203,12 +1203,11 @@ bool LoadWroldFromFile(KeyFrameDatabase *db, Map *wd, ORBVocabulary* mpvoc)
         string slg;	stringstream ssg;
         getline(ifGlobal, slg);
         ssg<<slg;
-        ssg>>gnNExtIdMP>>mpSaveCnt>>kfSaveCnt;//>>frameNextId>>kfNextId;
+        ssg>>gnNExtIdMP>>mpSaveCnt>>kfSaveCnt>>frameNextId>>kfNextId;
 
         MapPoint::nNextId = gnNExtIdMP;
-        Frame::nNextId = KeyFrame::nNextId+1;
-//        Frame::nNextId = frameNextId;
-//        KeyFrame::nNextId = kfNextId;
+        Frame::nNextId = frameNextId;
+        KeyFrame::nNextId = kfNextId;
     }
     ifGlobal.close();
 

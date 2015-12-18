@@ -38,6 +38,8 @@
 
 #include "Converter.h"
 
+//Added by wangjing
+#include "SaveLoadWorld.h"
 
 using namespace std;
 
@@ -113,6 +115,24 @@ int main(int argc, char **argv)
     //Create the map
     ORB_SLAM::Map World;
 
+
+	//3 ------------------------------------
+	//Added by wangjing
+	bool bReadOK = LoadWroldFromFile(&Database, &World, &Vocabulary);
+	if(bReadOK)
+	{
+		cout<<"load world file successfully."<<endl;
+	}
+	else
+	{
+		cout<<"load world file failed."<<endl;
+		// operations
+        World.clear();
+        Database.clear();
+	}
+	//3 ------------------------------------
+
+
     FramePub.SetMap(&World);
 
     //Create Map Publisher for Rviz
@@ -123,6 +143,15 @@ int main(int argc, char **argv)
     boost::thread trackingThread(&ORB_SLAM::Tracking::Run,&Tracker);
 
     Tracker.SetKeyFrameDatabase(&Database);
+
+	//3 ------------------------------------
+	//Added by wangjing
+    if(bReadOK)
+    {
+        Tracker.mState = Tracking::LOST;
+        Tracker.mLastProcessedState = Tracking::LOST;
+    }
+	//3 ------------------------------------
 
     //Initialize the Local Mapping Thread and launch
     ORB_SLAM::LocalMapping LocalMapper(&World);
@@ -183,6 +212,11 @@ int main(int argc, char **argv)
 
     }
     f.close();
+
+	//3 ------------------------------------
+	//Added by wangjing
+    SaveWorldToFile(World,Database);
+	//3 ------------------------------------
 
     ros::shutdown();
 
