@@ -38,8 +38,6 @@
 
 #include "Converter.h"
 
-//Added by wangjing
-#include "SaveLoadWorld.h"
 
 using namespace std;
 
@@ -115,28 +113,6 @@ int main(int argc, char **argv)
     //Create the map
     ORB_SLAM::Map World;
 
-
-//	//Added by wangjing
-	bool bReadOK = LoadWroldFromFile(&Database, &World, &Vocabulary);
-
-	if(bReadOK)
-	{
-		cout<<"load world file successfully."<<endl;
-		// operations
-		////////////////////////
-		// set tracking status -> LOST
-	}
-	else
-	{
-		cout<<"load world file failed."<<endl;
-		// operations
-        World.clear();
-        Database.clear();
-		
-	}
-
-
-
     FramePub.SetMap(&World);
 
     //Create Map Publisher for Rviz
@@ -147,13 +123,6 @@ int main(int argc, char **argv)
     boost::thread trackingThread(&ORB_SLAM::Tracking::Run,&Tracker);
 
     Tracker.SetKeyFrameDatabase(&Database);
-
-    //Added by wangjing
-    if(bReadOK)
-    {
-        Tracker.mState = Tracking::LOST;
-        Tracker.mLastProcessedState = Tracking::LOST;
-    }
 
     //Initialize the Local Mapping Thread and launch
     ORB_SLAM::LocalMapping LocalMapper(&World);
@@ -172,11 +141,6 @@ int main(int argc, char **argv)
 
     LoopCloser.SetTracker(&Tracker);
     LoopCloser.SetLocalMapper(&LocalMapper);
-
-	//Added by wangjing
-	//get euler angle from IMU via Serial Port and set to tracker
-	Tracker.SetIMUEulerAngle(30.0/180.0*3.1415926,20.0/180.0*3.1415926,50.0/180.0*3.1415926);
-
 
     //This "main" thread will show the current processed frame and publish the map
     float fps = fsSettings["Camera.fps"];
@@ -219,37 +183,6 @@ int main(int argc, char **argv)
 
     }
     f.close();
-
-
-	//------------------------------------------
-
-	//Added by wangjing
-    SaveWorldToFile(World,Database);
-
-	//------------------------------------------
-	//------------------------------------------
-	//------------------------------------------
-	using namespace ORB_SLAM;
-
-    //for test
-    cout<<"max KF id: "<<World.GetMaxKFid()<<endl;
-    cout<<"min KF id: "<<vpKFs[0]->mnId<<endl;
-    cout<<"KF number: "<<World.KeyFramesInMap()<<endl;
-    if(vpKFs[0]->isBad())
-        cout<<"first KF is bad"<<endl;
-    else
-        cout<<"first KF is good"<<endl;
-    for (size_t i=0;i<vpKFs.size();i++)
-    {
-        KeyFrame* pKFi = vpKFs[i];
-        std::vector<float> tmpScaleFactors = pKFi->GetScaleFactors();
-        std::vector<float> tmpScaleLevelSigma2 = pKFi->GetVectorScaleSigma2();
-        std::cout<<pKFi->mnId<<"\t"<<pKFi->GetScaleLevels()<<"\tscale factor: ";
-        std::cout<<endl;
-    }
-	//------------------------------------------
-	//------------------------------------------
-	//------------------------------------------
 
     ros::shutdown();
 

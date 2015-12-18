@@ -36,9 +36,6 @@
 #include<iostream>
 #include<fstream>
 
-//added by wangjing
-#include <math.h>
-
 
 using namespace std;
 
@@ -143,12 +140,6 @@ Tracking::Tracking(ORBVocabulary* pVoc, FramePublisher *pFramePublisher, MapPubl
     tf::Transform tfT;
     tfT.setIdentity();
     mTfBr.sendTransform(tf::StampedTransform(tfT,ros::Time::now(), "/ORB_SLAM/World", "/ORB_SLAM/Camera"));
-
-	//Added by wangjing
-	IMUEulerAngle[0]=0;
-	IMUEulerAngle[1]=0;
-	IMUEulerAngle[2]=0;
-	BaseRcw = cv::Mat::eye(3,3,CV_32F);
 }
 
 void Tracking::SetLocalMapper(LocalMapping *pLocalMapper)
@@ -176,8 +167,6 @@ void Tracking::Run()
 
 void Tracking::GrabImage(const sensor_msgs::ImageConstPtr& msg)
 {
-
-    //cout<<"tp1 ";
 
     cv::Mat im;
 
@@ -207,16 +196,12 @@ void Tracking::GrabImage(const sensor_msgs::ImageConstPtr& msg)
         cv_ptr->image.copyTo(im);
     }
 
-    //cout<<"tp2 ";
-
     if(mState==WORKING || mState==LOST)
         mCurrentFrame = Frame(im,cv_ptr->header.stamp.toSec(),mpORBextractor,mpORBVocabulary,mK,mDistCoef);
     else
         mCurrentFrame = Frame(im,cv_ptr->header.stamp.toSec(),mpIniORBextractor,mpORBVocabulary,mK,mDistCoef);
 
     // Depending on the state of the Tracker we perform different tasks
-
-    //cout<<"tp3 ";
 
     if(mState==NO_IMAGES_YET)
     {
@@ -226,14 +211,8 @@ void Tracking::GrabImage(const sensor_msgs::ImageConstPtr& msg)
     mLastProcessedState=mState;
 
     if(mState==NOT_INITIALIZED)
-    {		
+    {
         FirstInitialization();
-		
-		
-    	//Added by wangjing
-		//set reference rotation and translation
-		SetBaseRcw();
-		//
     }
     else if(mState==INITIALIZING)
     {
@@ -243,8 +222,6 @@ void Tracking::GrabImage(const sensor_msgs::ImageConstPtr& msg)
     {
         // System is initialized. Track Frame.
         bool bOK;
-
-        //cout<<"tp4 ";
 
         // Initial Camera Pose Estimation from Previous Frame (Motion Model or Coarse) or Relocalisation
         if(mState==WORKING && !RelocalisationRequested())
@@ -263,13 +240,9 @@ void Tracking::GrabImage(const sensor_msgs::ImageConstPtr& msg)
             bOK = Relocalisation();
         }
 
-        //cout<<"tp5 ";
-
         // If we have an initial estimation of the camera pose and matching. Track the local map.
         if(bOK)
             bOK = TrackLocalMap();
-
-        //cout<<"tp6 ";
 
         // If tracking were good, check if we insert a keyframe
         if(bOK)
@@ -289,8 +262,6 @@ void Tracking::GrabImage(const sensor_msgs::ImageConstPtr& msg)
                     mCurrentFrame.mvpMapPoints[i]=NULL;
             }
         }
-
-        //cout<<"tp7 ";
 
         if(bOK)
             mState = WORKING;
@@ -324,13 +295,11 @@ void Tracking::GrabImage(const sensor_msgs::ImageConstPtr& msg)
         }
 
         mLastFrame = Frame(mCurrentFrame);
-        //cout<<"tp8 ";
      }       
 
     // Update drawer
     mpFramePublisher->Update(this);
 
-    //cout<<"tp9 ";
     if(!mCurrentFrame.mTcw.empty())
     {
         cv::Mat Rwc = mCurrentFrame.mTcw.rowRange(0,3).colRange(0,3).t();
@@ -343,46 +312,8 @@ void Tracking::GrabImage(const sensor_msgs::ImageConstPtr& msg)
         tf::Transform tfTcw(M,V);
 
         mTfBr.sendTransform(tf::StampedTransform(tfTcw,ros::Time::now(), "ORB_SLAM/World", "ORB_SLAM/Camera"));
-
-		//added by wangjing
-		cv::Mat Rcw=mCurrentFrame.mTcw.rowRange(0,3).colRange(0,3);
-		cv::Mat tcw=mCurrentFrame.mTcw.rowRange(0,3).col(3);
-		cv::Mat Ow=-Rcw.t()*tcw;		//camera center?
-
-//		float tmpf=180.0/3.1415926;
-//	//		printf("tcw: %4.2f, %4.2f, %4.2f\n",tcw.at<float>(0),tcw.at<float>(1),tcw.at<float>(2));
-//			printf("twc: %4.2f, %4.2f, %4.2f\n",twc.at<float>(0),twc.at<float>(1),twc.at<float>(2));
-//	//		printf("Ow: %4.2f, %4.2f, %4.2f\n",Ow.at<float>(0),Ow.at<float>(1),Ow.at<float>(2));
-//	//		printf("Rcw angle x/y/z: %4.2f, %4.2f, %4.2f\n",
-//	//			-atan2(Rcw.at<float>(1,2),Rcw.at<float>(2,2))*tmpf,
-//	//			  asin(Rcw.at<float>(0,2))*tmpf,
-//	//			-atan2(Rcw.at<float>(0,1),Rcw.at<float>(0,0))*tmpf);
-//			printf("Rwc angle x/y/z: %4.2f, %4.2f, %4.2f\n",
-//				-atan2(Rwc.at<float>(1,2),Rwc.at<float>(2,2))*tmpf,
-//				  asin(Rwc.at<float>(0,2))*tmpf,
-//				-atan2(Rwc.at<float>(0,1),Rwc.at<float>(0,0))*tmpf);
-		
-//		float roll,pitch,yaw;
-//		//cv::transpose(Rwc,Rcw);
-//		yaw = -atan2(Rcw.at<float>(0,1),Rcw.at<float>(0,0));
-//		pitch = asin(Rcw.at<float>(0,2));
-//		roll = -atan2(Rcw.at<float>(1,2),Rcw.at<float>(2,2)
-//		printf("%3.2f,  %3.2f,  %3.2f\n",pitch*tmpf,roll*tmpf,yaw*tmpf);
-//		printf("%3.2f,  %3.2f,  %3.2f\n",-atan2(BaseRcw.at<float>(1,2),BaseRcw.at<float>(2,2))*tmpf,asin(BaseRcw.at<float>(0,2))*tmpf,
-//			-atan2(BaseRcw.at<float>(0,1),BaseRcw.at<float>(0,0))*tmpf);
     }
 
-//    //cout<<"tp10 ";
-//    //Added by wangjing
-//    //for test
-//    cout<<"tracking, current frame Id: "<<mCurrentFrame.mnId<<endl;
-//    if(mpLastKeyFrame)
-//        cout<<"last KF mnId: "<<mpLastKeyFrame->mnId<<endl;
-//    else cout<<"no last KFmnId"<<endl;
-//    if(mpReferenceKF)
-//        cout<<"ref KF mnId: "<<mpReferenceKF->mnId<<endl;
-//    else cout<<"no ref KF"<<endl;
-//    cout<<endl;
 }
 
 
@@ -924,8 +855,6 @@ bool Tracking::Relocalisation()
         vpCandidateKFs.reserve(10);
         vpCandidateKFs = mpLastKeyFrame->GetBestCovisibilityKeyFrames(9);
         vpCandidateKFs.push_back(mpLastKeyFrame);
-
-        cout<<"here? why? ";
     }
 
     if(vpCandidateKFs.empty())
@@ -1162,44 +1091,6 @@ void Tracking::CheckResetByPublishers()
         }
         r.sleep();
     }
-}
-
-
-//Added by wangjing
-void Tracking::SetIMUEulerAngle(float r,float p,float y)
-{
-	IMUEulerAngle[0] =r;
-	IMUEulerAngle[1] =p;
-	IMUEulerAngle[2] =y;
-}
-
-
-void Tracking::SetIMUEulerAngle(float *a)
-{
-	IMUEulerAngle[0] =a[0];
-	IMUEulerAngle[1] =a[1];
-	IMUEulerAngle[2] =a[2];
-}
-
-void Tracking::SetBaseRcw(void)
-{
-	float sr = sin(IMUEulerAngle[0]);
-	float cr = cos(IMUEulerAngle[0]);
-	float sp = sin(IMUEulerAngle[1]);
-	float cp = cos(IMUEulerAngle[1]);
-	float sy = sin(IMUEulerAngle[2]);
-	float cy = cos(IMUEulerAngle[2]);
-
-	BaseRcw.at<float>(0,0) = cy*cp;
-	BaseRcw.at<float>(0,1) = -sy*cp;
-	BaseRcw.at<float>(0,2) = sp;
-	BaseRcw.at<float>(1,0) = cr*sy+sr*cy*sp;
-	BaseRcw.at<float>(1,1) = cr*cy-sr*sy*sp;
-	BaseRcw.at<float>(1,2) = -sr*cp;
-	BaseRcw.at<float>(2,0) = sr*sy-cr*sp*cy;
-	BaseRcw.at<float>(2,1) = sr*cy+cr*sy*sp;
-	BaseRcw.at<float>(2,2) = cp*cr;
-	
 }
 
 } //namespace ORB_SLAM

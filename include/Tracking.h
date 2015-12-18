@@ -88,16 +88,6 @@ public:
 
     void CheckResetByPublishers();
 
-	//Added by wangjing
-	// Pose from IMU
-	float IMUEulerAngle[3];
-	void SetIMUEulerAngle(float *angles);
-	void SetIMUEulerAngle(float r,float p,float y);
-
-	cv::Mat BaseRcw;
-	void SetBaseRcw(void);
-
-
 
 protected:
     void GrabImage(const sensor_msgs::ImageConstPtr& msg);

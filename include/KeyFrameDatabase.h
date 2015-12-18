@@ -57,7 +57,7 @@ public:
    // Relocalisation
    std::vector<KeyFrame*> DetectRelocalisationCandidates(Frame* F);
 
-//protected:
+protected:
 
   // Associated vocabulary
   const ORBVocabulary* mpVoc;
