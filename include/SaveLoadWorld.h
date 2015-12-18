@@ -1134,10 +1134,28 @@ bool LoadWroldFromFile(KeyFrameDatabase *db, Map *wd, ORBVocabulary* mpvoc)
 		db->add(pKF);
 	}
 
-	//1 step 5. world
-    cout<<"loading step 5.."<<endl;
+    //1 step5. evaluate nNextId for Frame/MapPoint/KeyFrame
+    ifstream ifGlobal;
+    ret4 = myOpenFile(ifGlobal,	string(ros::package::getPath("ORB_SLAM")+"/tmp/"+"GlobalParams.txt"));
+    if(ret4)
+    {
+        cout<<"loading step 5.."<<endl;
+        long unsigned int gnNExtIdMP,kfSaveCnt,mpSaveCnt,frameNextId,kfNextId;
+        string slg;	stringstream ssg;
+        getline(ifGlobal, slg);
+        ssg<<slg;
+        ssg>>gnNExtIdMP>>mpSaveCnt>>kfSaveCnt>>frameNextId>>kfNextId;
+
+        MapPoint::nNextId = gnNExtIdMP;
+        Frame::nNextId = frameNextId;
+        KeyFrame::nNextId = kfNextId;
+    }
+    ifGlobal.close();
+
+    //1 step 6. world
 	if(ret1&&ret2&&ret3&&ret4)
 	{
+        cout<<"loading step 6.."<<endl;
 		for(MapKFIndexPointer::iterator mit=kfIdxPtMap.begin(), mend=kfIdxPtMap.end(); mit!=mend; mit++)
 		{
 			wd->AddKeyFrame(mit->second);
@@ -1148,22 +1166,8 @@ bool LoadWroldFromFile(KeyFrameDatabase *db, Map *wd, ORBVocabulary* mpvoc)
 		}
 	}	
 
-	//evaluate nNextId for Frame/MapPoint/KeyFrame
-	ifstream ifGlobal;
-    ret4 = myOpenFile(ifGlobal,	string(ros::package::getPath("ORB_SLAM")+"/tmp/"+"GlobalParams.txt"));
-	if(ret4)
-	{
-		long unsigned int gnNExtIdMP,kfSaveCnt,mpSaveCnt,frameNextId,kfNextId;
-		string slg;	stringstream ssg;
-		getline(ifGlobal, slg); 
-		ssg<<slg;
-		ssg>>gnNExtIdMP>>mpSaveCnt>>kfSaveCnt>>frameNextId>>kfNextId;
-		
-		MapPoint::nNextId = gnNExtIdMP;
-		Frame::nNextId = frameNextId;
-		KeyFrame::nNextId = kfNextId;
-	}
-    ifGlobal.close();
+
+
 	
 	return (ret1&&ret2&&ret3&&ret4);
 }
