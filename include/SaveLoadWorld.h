@@ -87,11 +87,11 @@ bool loadMPVariables(KeyFrameDatabase *db, Map *wd, MapMPIndexPointer *mpIdxPtMa
 	//Line0, MP.nNextId
 	getline(ifGlobal, slg); 
 	ssg<<slg;
-	ssg>>gnNExtIdMP>>mpSaveCnt>>kfSaveCnt>>frameNextId>>kfNextId;
+    ssg>>gnNExtIdMP>>mpSaveCnt>>kfSaveCnt;//>>frameNextId>>kfNextId;
 	
 	MapPoint::nNextId = gnNExtIdMP;
-	Frame::nNextId = frameNextId;
-	KeyFrame::nNextId = kfNextId;
+//	Frame::nNextId = frameNextId;
+//	KeyFrame::nNextId = kfNextId;
 	}
 
 	//record the reference KF's mnId, in the order of lines saved in file
@@ -150,7 +150,7 @@ bool loadMPVariables(KeyFrameDatabase *db, Map *wd, MapMPIndexPointer *mpIdxPtMa
 
 		// new MapPoint memory space and pointer
         MapPoint* tmpMP = new MapPoint(mWorldPos, tmpKF, wd);
-
+        MapPoint::nNextId = nNextId;
 
 		//public
 		tmpMP->mnId = mnId;
@@ -245,7 +245,7 @@ bool loadKFVariables(KeyFrameDatabase *db, Map *wd, ORBVocabulary* mpvoc,
 	//Line0, MP.nNextId
 	getline(ifGlobal, slg);	
 	ssg<<slg;
-    ssg>>gnNExtIdMP>>mpSaveCnt>>kfSaveCnt>>tmp1>>tmp2;
+    ssg>>gnNExtIdMP>>mpSaveCnt>>kfSaveCnt;//>>tmp1>>tmp2;
 	cout<<"total "<<mpSaveCnt<<" MapPoints saved."<<endl;
 	cout<<"total "<<mpSaveCnt<<" KeyFrames saved."<<endl;
 	VecKFmnId.resize(kfSaveCnt);
@@ -377,23 +377,34 @@ bool loadKFVariables(KeyFrameDatabase *db, Map *wd, ORBVocabulary* mpvoc,
 		else
 			tmpKF = new KeyFrame(tmpFrame, wd, db);
 
+        KeyFrame::nNextId = nNextId;
 		//evaluate 
 		tmpKF->mnId = mnId;
 		tmpKF->mnFrameId = mnFrameId;
 		tmpKF->mTimeStamp = mTimeStamp;
 
 		
-		//tmpKF->mnTrackReferenceForFrame = 0;//mnTrackReferenceForFrame;
-		tmpKF->mnFuseTargetForKF = 0;//mnFuseTargetForKF;
-		//tmpKF->mnBALocalForKF = 0;//mnBALocalForKF;
-		//tmpKF->mnBAFixedForKF = 0;//mnBAFixedForKF;
-		//tmpKF->mnLoopQuery = 0;//mnLoopQuery;
-		tmpKF->mnLoopWords = 0;//mnLoopWords;
-		tmpKF->mLoopScore = 0;//mLoopScore;
-		//tmpKF->mnRelocQuery = 0;//mnRelocQuery;
-		tmpKF->mnRelocWords = 0;//mnRelocWords;
-		tmpKF->mRelocScore = 0;//mRelocScore;
+        tmpKF->mnTrackReferenceForFrame = mnTrackReferenceForFrame;
+        tmpKF->mnFuseTargetForKF = mnFuseTargetForKF;
+        tmpKF->mnBALocalForKF = mnBALocalForKF;
+        tmpKF->mnBAFixedForKF = mnBAFixedForKF;
+        tmpKF->mnLoopQuery = mnLoopQuery;
+        tmpKF->mnLoopWords = mnLoopWords;
+        tmpKF->mLoopScore = mLoopScore;
+        tmpKF->mnRelocQuery = mnRelocQuery;
+        tmpKF->mnRelocWords = mnRelocWords;
+        tmpKF->mRelocScore = mRelocScore;
 
+//        //tmpKF->mnTrackReferenceForFrame = 0;//mnTrackReferenceForFrame;
+//		tmpKF->mnFuseTargetForKF = 0;//mnFuseTargetForKF;
+//		//tmpKF->mnBALocalForKF = 0;//mnBALocalForKF;
+//		//tmpKF->mnBAFixedForKF = 0;//mnBAFixedForKF;
+//		//tmpKF->mnLoopQuery = 0;//mnLoopQuery;
+//		tmpKF->mnLoopWords = 0;//mnLoopWords;
+//		tmpKF->mLoopScore = 0;//mLoopScore;
+//		//tmpKF->mnRelocQuery = 0;//mnRelocQuery;
+//		tmpKF->mnRelocWords = 0;//mnRelocWords;
+//		tmpKF->mRelocScore = 0;//mRelocScore;
 		
 		tmpKF->SetPose(Rcwi,tcwi);
 
@@ -534,7 +545,7 @@ bool loadMPKFPointers(MapMPIndexPointer &mpIdxPtMap, MapKFIndexPointer &kfIdxPtM
 	long unsigned int gnNExtIdMP;
 	getline(ifGlobal,slg);
 	ssg << slg;
-    ssg>>gnNExtIdMP>>mpSaveCnt>>kfSaveCnt>>tmp1>>tmp2;
+    ssg>>gnNExtIdMP>>mpSaveCnt>>kfSaveCnt;//>>tmp1>>tmp2;
     if(ssg.fail()) cerr<<"ssg fail in loadMPKFPointers, shouldn't."<<endl;
 	}
 
@@ -606,24 +617,24 @@ bool loadMPKFPointers(MapMPIndexPointer &mpIdxPtMap, MapKFIndexPointer &kfIdxPtM
 		//		std::vector<MapPoint*> mvpMapPoints;
 		}
 
-//		//after all keyframes loaded
-//		//5. kfLoopEdges, load kf id
-//		{
-//		getline(ifkfLPEGs,slLPEGs);
-//		ssLPEGs << slLPEGs;
-//		long unsigned int kfmnIdread;
-//		size_t nLPEGid;
-//		ssLPEGs>>kfmnIdread>>nLPEGid;
-//		if(kfmnId!=kfmnIdread) cerr<<"lpeg: kfmnId!=VecKFmnId[linecnt], shouldn't"<<endl;
-//		for(size_t i=0;i<nLPEGid;i++)
-//		{
-//			long unsigned int tkfmnId;
-//			ssLPEGs>>tkfmnId;
-//			pKF->AddLoopEdge(kfIdxPtMap[tkfmnId]);
-//		}
-//		//pKF->mspLoopEdges
-//		//		std::set<KeyFrame*> mspLoopEdges;
-//		}
+        //after all keyframes loaded
+        //5. kfLoopEdges, load kf id
+        {
+        getline(ifkfLPEGs,slLPEGs);
+        ssLPEGs << slLPEGs;
+        long unsigned int kfmnIdread;
+        size_t nLPEGid;
+        ssLPEGs>>kfmnIdread>>nLPEGid;
+        if(kfmnId!=kfmnIdread) cerr<<"lpeg: kfmnId!=VecKFmnId[linecnt], shouldn't"<<endl;
+        for(size_t i=0;i<nLPEGid;i++)
+        {
+            long unsigned int tkfmnId;
+            ssLPEGs>>tkfmnId;
+            pKF->AddLoopEdge(kfIdxPtMap[tkfmnId]);
+        }
+        //pKF->mspLoopEdges
+        //		std::set<KeyFrame*> mspLoopEdges;
+        }
 
 	}
 
@@ -1144,11 +1155,12 @@ bool LoadWroldFromFile(KeyFrameDatabase *db, Map *wd, ORBVocabulary* mpvoc)
         string slg;	stringstream ssg;
         getline(ifGlobal, slg);
         ssg<<slg;
-        ssg>>gnNExtIdMP>>mpSaveCnt>>kfSaveCnt>>frameNextId>>kfNextId;
+        ssg>>gnNExtIdMP>>mpSaveCnt>>kfSaveCnt;//>>frameNextId>>kfNextId;
 
         MapPoint::nNextId = gnNExtIdMP;
-        Frame::nNextId = frameNextId;
-        KeyFrame::nNextId = kfNextId;
+        Frame::nNextId = KeyFrame::nNextId+1;
+//        Frame::nNextId = frameNextId;
+//        KeyFrame::nNextId = kfNextId;
     }
     ifGlobal.close();
 
