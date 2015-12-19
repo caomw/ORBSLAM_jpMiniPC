@@ -113,32 +113,32 @@ bool loadMPVariables(KeyFrameDatabase *db, Map *wd, MapMPIndexPointer *mpIdxPtMa
 
 		// plain variables in MapPoint
 		unsigned long int nNextId;
-		long unsigned int mnId, mpRefKFId;//, mnTrackReferenceForFrame, mnLastFrameSeen, mnBALocalForKF, mnFuseCandidateForKF;
-		//long unsigned int mnLoopPointForKF, mnCorrectedByKF, mnCorrectedReference;
+        long unsigned int mnId, mpRefKFId, mnTrackReferenceForFrame, mnLastFrameSeen, mnBALocalForKF, mnFuseCandidateForKF;
+        long unsigned int mnLoopPointForKF, mnCorrectedByKF, mnCorrectedReference;
 		long int mnFirstKFid;
-		//float mTrackProjX, mTrackProjY, mTrackViewCos, mfMinDistance, mfMaxDistance;
-		//bool mbTrackInView;
-		//int mnTrackScaleLevel, mnVisible, mnFound;
+        float mTrackProjX, mTrackProjY, mTrackViewCos, mfMinDistance, mfMaxDistance;
+        bool mbTrackInView;
+        int mnTrackScaleLevel, mnVisible, mnFound;
 		Mat mWorldPos = Mat::zeros(3, 1, CV_32F);
-		//Mat mNormalVector = Mat::zeros(3, 1, CV_32F);
+        Mat mNormalVector = Mat::zeros(3, 1, CV_32F);
 		Mat mDescriptor = Mat::zeros(1, 32, CV_8UC1);
 
-//		ss >> nNextId >> mnId >> mnFirstKFid >> mTrackProjX >> mTrackProjY >> mbTrackInView >> mnTrackScaleLevel >> mTrackViewCos >> mnTrackReferenceForFrame;
+        ss >> nNextId >> mnId >> mnFirstKFid >> mTrackProjX >> mTrackProjY >> mbTrackInView >> mnTrackScaleLevel >> mTrackViewCos >> mnTrackReferenceForFrame;
+        ss >> mnLastFrameSeen >> mnBALocalForKF >> mnFuseCandidateForKF >> mnLoopPointForKF >> mnCorrectedByKF >> mnCorrectedReference;
+//		ss >> nNextId >> mnId >> mnFirstKFid ;//>> mTrackProjX >> mTrackProjY >> mbTrackInView >> mnTrackScaleLevel >> mTrackViewCos >> mnTrackReferenceForFrame;
 //		ss >> mnLastFrameSeen >> mnBALocalForKF >> mnFuseCandidateForKF >> mnLoopPointForKF >> mnCorrectedByKF >> mnCorrectedReference;
-		ss >> nNextId >> mnId >> mnFirstKFid ;//>> mTrackProjX >> mTrackProjY >> mbTrackInView >> mnTrackScaleLevel >> mTrackViewCos >> mnTrackReferenceForFrame;
-		//ss >> mnLastFrameSeen >> mnBALocalForKF >> mnFuseCandidateForKF >> mnLoopPointForKF >> mnCorrectedByKF >> mnCorrectedReference;
 		for (int i = 0; i < 3; i++)
 		{
 			float tmpf;
 			ss >> tmpf;
 			mWorldPos.at<float>(i) = tmpf;
 		}
-//		for (int i = 0; i < 3; i++)
-//		{
-//			float tmpf;
-//			ss >> tmpf;
-//			mNormalVector.at<float>(i) = tmpf;
-//		}
+        for (int i = 0; i < 3; i++)
+        {
+            float tmpf;
+            ss >> tmpf;
+            mNormalVector.at<float>(i) = tmpf;
+        }
 		uint32_t *tpdes = mDescriptor.ptr<uint32_t>();
 		for (int i = 0; i < 8; i++)
 		{
@@ -146,7 +146,7 @@ bool loadMPVariables(KeyFrameDatabase *db, Map *wd, MapMPIndexPointer *mpIdxPtMa
 			ss >> tmpi;
 			tpdes[i] = tmpi;
 		}
-		//ss >> mnVisible >> mnFound >> mfMinDistance >> mfMaxDistance ;
+        ss >> mnVisible >> mnFound >> mfMinDistance >> mfMaxDistance ;
 		ss >> mpRefKFId;
         if(ss.fail()) cerr<<"ssfail in mpVariables, shouldn't."<<endl;
 		if(mnFirstKFid<0) cerr<<"mnFirstKFid<0, shouldn't."<<endl;
@@ -159,11 +159,11 @@ bool loadMPVariables(KeyFrameDatabase *db, Map *wd, MapMPIndexPointer *mpIdxPtMa
 		tmpMP->mnId = mnId;
 		tmpMP->mnFirstKFid = mnFirstKFid;
 		
-		tmpMP->mTrackProjX = mTrackProjX;
-		tmpMP->mTrackProjY = mTrackProjY;
-		tmpMP->mbTrackInView = mbTrackInView;
-		tmpMP->mnTrackScaleLevel = mnTrackScaleLevel;
-		tmpMP->mTrackViewCos = mTrackViewCos;
+        tmpMP->mTrackProjX = mTrackProjX;
+        tmpMP->mTrackProjY = mTrackProjY;
+        tmpMP->mbTrackInView = mbTrackInView;
+        tmpMP->mnTrackScaleLevel = mnTrackScaleLevel;
+        tmpMP->mTrackViewCos = mTrackViewCos;
 		
 		tmpMP->mnTrackReferenceForFrame = 0;//mnTrackReferenceForFrame;
 		tmpMP->mnLastFrameSeen = 0;//mnLastFrameSeen;
@@ -344,11 +344,11 @@ bool loadKFVariables(KeyFrameDatabase *db, Map *wd, ORBVocabulary* mpvoc,
 		getline(ifkfVar,slVar);
 		ssVar << slVar;	
 		//public
-		long unsigned int mnId,mnFrameId,mnTrackReferenceForFrame, mnFuseTargetForKF,mnBALocalForKF,mnBAFixedForKF;
-		long unsigned int mnLoopQuery,mnRelocQuery;
+        long unsigned int mnId,mnFrameId,mnTrackReferenceForFrame, mnFuseTargetForKF,mnBALocalForKF,mnBAFixedForKF;
+        long unsigned int mnLoopQuery,mnRelocQuery;
 		double mTimeStamp;
-		int mnLoopWords,mnRelocWords;
-		float mLoopScore,mRelocScore;
+        int mnLoopWords,mnRelocWords;
+        float mLoopScore,mRelocScore;
 		//protected
 		cv::Mat Rcwi = Mat::eye(3, 3, CV_32F);
 		cv::Mat tcwi = Mat::zeros(3, 1, CV_32F);
@@ -357,17 +357,17 @@ bool loadKFVariables(KeyFrameDatabase *db, Map *wd, ORBVocabulary* mpvoc,
 		ssVar>>nNextId>>mnId>>mnFrameId>>mTimeStamp;
 
 		//To be deleted.
-		//ssVar>>mnTrackReferenceForFrame;
-		//ssVar>>mnFuseTargetForKF>>mnBALocalForKF>>mnBAFixedForKF>>mnLoopQuery>>mnLoopWords;
-		//ssVar>>mLoopScore>>mnRelocQuery>>mnRelocWords>>mRelocScore;
+        ssVar>>mnTrackReferenceForFrame;
+        ssVar>>mnFuseTargetForKF>>mnBALocalForKF>>mnBAFixedForKF>>mnLoopQuery>>mnLoopWords;
+        ssVar>>mLoopScore>>mnRelocQuery>>mnRelocWords>>mRelocScore;
 
 		for(int ti=0;ti<3;ti++)		{
 			for(int tj=0;tj<3;tj++)		{
 				ssVar >> Rcwi.at<float>(ti,tj);	}	}
 		for(int ti=0;ti<3;ti++)		{
 			ssVar >> tcwi.at<float>(ti);			}
-//		for(int ti=0;ti<3;ti++)		{
-//			ssVar >> Owi.at<float>(ti);				}
+        for(int ti=0;ti<3;ti++)		{
+            ssVar >> Owi.at<float>(ti);				}
 		if(ssVar.fail())
         {
 			cerr<<"ssVar fail. shouldn't"<<endl;
@@ -786,37 +786,38 @@ void SaveWorldToFile( Map& World, KeyFrameDatabase& Database)
 			fmpVar << pMPi->nNextId << " ";
 			fmpVar << pMPi->mnId << " ";
 			fmpVar << pMPi->mnFirstKFid << " ";
-//			fmpVar << pMPi->mTrackProjX << " ";
-//			fmpVar << pMPi->mTrackProjY << " ";
+
+            fmpVar << pMPi->mTrackProjX << " ";
+            fmpVar << pMPi->mTrackProjY << " ";
 			
-//			fmpVar << pMPi->mbTrackInView << " ";
-//			fmpVar << pMPi->mnTrackScaleLevel << " ";
-//			fmpVar << pMPi->mTrackViewCos << " ";
-//			fmpVar << pMPi->mnTrackReferenceForFrame << " ";
-//			fmpVar << pMPi->mnLastFrameSeen << " ";
+            fmpVar << pMPi->mbTrackInView << " ";
+            fmpVar << pMPi->mnTrackScaleLevel << " ";
+            fmpVar << pMPi->mTrackViewCos << " ";
+            fmpVar << pMPi->mnTrackReferenceForFrame << " ";
+            fmpVar << pMPi->mnLastFrameSeen << " ";
 			
-//			fmpVar << pMPi->mnBALocalForKF << " ";
-//			fmpVar << pMPi->mnFuseCandidateForKF << " ";
-//			fmpVar << pMPi->mnLoopPointForKF << " ";
-//			fmpVar << pMPi->mnCorrectedByKF << " ";
-//			fmpVar << pMPi->mnCorrectedReference << " ";
+            fmpVar << pMPi->mnBALocalForKF << " ";
+            fmpVar << pMPi->mnFuseCandidateForKF << " ";
+            fmpVar << pMPi->mnLoopPointForKF << " ";
+            fmpVar << pMPi->mnCorrectedByKF << " ";
+            fmpVar << pMPi->mnCorrectedReference << " ";
 			// protected
 			fmpVar << setprecision(10);
 			cv::Mat twp = pMPi->GetWorldPos();
 			fmpVar << twp.at<float>(0) <<" "<< twp.at<float>(1) <<" "<< twp.at<float>(2) <<" ";
 			fmpVar << setprecision(7);
-//			cv::Mat tnv = pMPi->GetNormal();
-//			fmpVar << tnv.at<float>(0) <<" "<< tnv.at<float>(1) <<" "<< tnv.at<float>(2) <<" ";
+            cv::Mat tnv = pMPi->GetNormal();
+            fmpVar << tnv.at<float>(0) <<" "<< tnv.at<float>(1) <<" "<< tnv.at<float>(2) <<" ";
 			cv::Mat tdes = pMPi->GetDescriptor();	//256b, 8*uint32_t
 			const uint32_t *tpdes = tdes.ptr<uint32_t>();
 			for(int ti=0; ti<8; ti++)
 			{
 				fmpVar << tpdes[ti] <<" ";
 			}
-//			fmpVar << pMPi->GetmnVisible() <<" ";
-//			fmpVar << pMPi->GetmnFound() <<" ";
-//			fmpVar << pMPi->GetMinDistanceInvariance() <<" ";
-//			fmpVar << pMPi->GetMaxDistanceInvariance() <<" ";
+            fmpVar << pMPi->GetmnVisible() <<" ";
+            fmpVar << pMPi->GetmnFound() <<" ";
+            fmpVar << pMPi->GetMinDistanceInvariance() <<" ";
+            fmpVar << pMPi->GetMaxDistanceInvariance() <<" ";
 			fmpVar << pMPi->GetReferenceKeyFrame()->mnId <<" ";
 			fmpVar << std::endl;
 			}
@@ -938,15 +939,15 @@ void SaveWorldToFile( Map& World, KeyFrameDatabase& Database)
 				}
 			}
 			cv::Mat tcwi = pKFi->GetTranslation();
-//			for(int ti=0;ti<3;ti++)
-//			{
-//				fkfVar << tcwi.at<float>(ti) <<" ";
-//			}
-//			cv::Mat Owi = pKFi->GetCameraCenter();
-			for(int ti=0;ti<3;ti++)
-			{
-				fkfVar << Owi.at<float>(ti) <<" ";
-			}
+            for(int ti=0;ti<3;ti++)
+            {
+                fkfVar << tcwi.at<float>(ti) <<" ";
+            }
+            cv::Mat Owi = pKFi->GetCameraCenter();
+            for(int ti=0;ti<3;ti++)
+            {
+                fkfVar << Owi.at<float>(ti) <<" ";
+            }
 			fkfVar << endl;
 			//2 -------------------------------
 
