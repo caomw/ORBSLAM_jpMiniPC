@@ -846,8 +846,6 @@ void SaveWorldToFile( Map& World, KeyFrameDatabase& Database)
 	fmpObs.close();
 	
 	cout<<"total "<<mpSaveCnt<<" MapPoints saved."<<endl;
-    if(mpSaveCnt!=tmpIdx)
-        cerr<<"mpSaveCnt != tmpIdx. impossible!"<<endl;
 	}
 	//1 -----------------------------------------------
 
@@ -1085,8 +1083,6 @@ void SaveWorldToFile( Map& World, KeyFrameDatabase& Database)
 	fkfLPEGs.close();
 
 	cout<<"total "<<kfSaveCnt<<" KeyFrames saved."<<endl;
-    if(kfSaveCnt!=tmpIdx)
-        cerr<<"kfSaveCnt != tmpIdx. impossible!"<<endl;
 	}
 	//1 ------------------------------------------------
 
