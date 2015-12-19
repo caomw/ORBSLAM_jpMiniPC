@@ -40,6 +40,7 @@
 
 //Added by wangjing
 #include "SaveLoadWorld.h"
+//ofstream fstrack,fslocalmap,fsloopclose;
 
 using namespace std;
 
@@ -116,21 +117,41 @@ int main(int argc, char **argv)
     ORB_SLAM::Map World;
 
 
-	//3 ------------------------------------
-	//Added by wangjing
-	bool bReadOK = LoadWroldFromFile(&Database, &World, &Vocabulary);
-	if(bReadOK)
-	{
-		cout<<"load world file successfully."<<endl;
-	}
-	else
-	{
-		cout<<"load world file failed."<<endl;
-		// operations
+    //3 ------------------------------------
+    //Added by wangjing
+    KeyFrame *tpLastKF;
+//    fstrack.open(string(ros::package::getPath("ORB_SLAM")+"/tmp/"+"logTrack.txt").c_str());
+//    fstrack<<"mpReferenceKF->mnId"<<" ";
+//    fstrack<<"mvpLocalKeyFrames.size()"<<" "<<"mvpLocalMapPoints.size()"<<" ";
+//    fstrack<<"mnMatchesInliers"<<" "<<"mpLastKeyFrame->mnId"<<" "<<"mLastFrame.mnId"<<" ";
+//    fstrack<<"mnLastKeyFrameId"<<" "<<"mnLastRelocFrameId"<<" ";
+//    fstrack<<"mbPublisherStopped"<<" "<<"mbReseting"<<" ";
+//    fstrack<<"mbForceRelocalisation"<<" "<<"mbMotionModel"<<endl;
+//    fslocalmap.open(string(ros::package::getPath("ORB_SLAM")+"/tmp/"+"logLMap.txt").c_str());
+//    fslocalmap<<"mbResetRequested"<<" "<<"mlNewKeyFrames.size()"<<" ";
+//    fslocalmap<<"mpCurrentKeyFrame->mnId"<<" "<<"mlpRecentAddedMapPoints.size()"<<" ";
+//    fslocalmap<<"mbAbortBA"<<" "<<"mbStopped"<<" "<<"mbStopRequested"<<" "<<"mbAcceptKeyFrames"<<endl;
+//    fsloopclose.open(string(ros::package::getPath("ORB_SLAM")+"/tmp/"+"logLpCls.txt").c_str());
+//    fsloopclose<<"mbResetRequested"<<" "<<"mlpLoopKeyFrameQueue.size()"<<" ";
+//    fsloopclose<<"mvfLevelSigmaSquare.size()"<<" "<<"mnCovisibilityConsistencyTh"<<" ";
+//    fsloopclose<<"mpCurrentKF->mnId"<<" "<<"mpMatchedKF->mnId"<<" ";
+//    fsloopclose<<"mvConsistentGroups.size()"<<" "<<"mvpEnoughConsistentCandidates.size()"<<" ";
+//    fsloopclose<<"mvpCurrentConnectedKFs.size()"<<" "<<"mvpCurrentMatchedPoints.size()"<<" ";
+//    fsloopclose<<"mvpLoopMapPoints.size()"<<" "<<"mScale_cw"<<" "<<"mLastLoopKFid"<<endl;
+
+    bool bReadOK = LoadWroldFromFile(&Database, &World, &Vocabulary, tpLastKF);
+    if(bReadOK)
+    {
+        cout<<"load world file successfully."<<endl;
+    }
+    else
+    {
+        cout<<"load world file failed."<<endl;
+        // operations
         World.clear();
         Database.clear();
-	}
-	//3 ------------------------------------
+    }
+    //3 ------------------------------------
 
 
     FramePub.SetMap(&World);
@@ -144,14 +165,16 @@ int main(int argc, char **argv)
 
     Tracker.SetKeyFrameDatabase(&Database);
 
-	//3 ------------------------------------
-	//Added by wangjing
+    //3 ------------------------------------
+    //Added by wangjing
     if(bReadOK)
     {
         Tracker.mState = Tracking::LOST;
         Tracker.mLastProcessedState = Tracking::LOST;
+        Tracker.SetLastKeyframe(tpLastKF);
+        Tracker.SetLastFrameId(Frame::nNextId-1);
     }
-	//3 ------------------------------------
+    //3 ------------------------------------
 
     //Initialize the Local Mapping Thread and launch
     ORB_SLAM::LocalMapping LocalMapper(&World);
@@ -213,10 +236,13 @@ int main(int argc, char **argv)
     }
     f.close();
 
-	//3 ------------------------------------
-	//Added by wangjing
+    //3 ------------------------------------
+    //Added by wangjing
     SaveWorldToFile(World,Database);
-	//3 ------------------------------------
+//    fstrack.close();
+//    fslocalmap.close();
+//    fsloopclose.close();
+    //3 ------------------------------------
 
     ros::shutdown();
 

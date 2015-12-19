@@ -43,12 +43,21 @@ void LocalMapping::SetTracker(Tracking *pTracker)
     mpTracker=pTracker;
 }
 
+ofstream fslocalmap;
+
 void LocalMapping::Run()
 {
+    fslocalmap.open("/home/jpubt/catkin_ws/ORB_SLAM/tmp/logLMap.txt");
 
-    ros::Rate r(500);
+    ros::Rate r(5);//(500);
     while(ros::ok())
     {
+        fslocalmap<<ros::Time::now()<<" "<<mbResetRequested<<" "<<mlNewKeyFrames.size()<<" ";
+        if(mpCurrentKeyFrame)
+            fslocalmap<<mpCurrentKeyFrame->mnId<<" ";
+        fslocalmap<<"1-"<<mlpRecentAddedMapPoints.size()<<" ";
+        fslocalmap<<mbAbortBA<<" "<<mbStopped<<" "<<mbStopRequested<<" "<<mbAcceptKeyFrames<<endl;
+
         // Check if there are keyframes in the queue
         if(CheckNewKeyFrames())
         {            

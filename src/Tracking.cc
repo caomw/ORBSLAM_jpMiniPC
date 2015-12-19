@@ -157,8 +157,11 @@ void Tracking::SetKeyFrameDatabase(KeyFrameDatabase *pKFDB)
     mpKeyFrameDB = pKFDB;
 }
 
+ofstream fstrack;
 void Tracking::Run()
 {
+    fstrack.open("/home/jpubt/catkin_ws/ORB_SLAM/tmp/logTrack.txt");
+
     ros::NodeHandle nodeHandler;
     ros::Subscriber sub = nodeHandler.subscribe("/camera/image_raw", 1, &Tracking::GrabImage, this);
 
@@ -167,6 +170,18 @@ void Tracking::Run()
 
 void Tracking::GrabImage(const sensor_msgs::ImageConstPtr& msg)
 {
+    fstrack<<ros::Time::now()<<" ";
+    if(mpReferenceKF)
+        fstrack<<mpReferenceKF->mnId<<" ";
+    fstrack<<"1-"<<mvpLocalKeyFrames.size()<<" "<<mvpLocalMapPoints.size()<<" ";
+    fstrack<<mnMatchesInliers<<" ";
+    if(mpLastKeyFrame)
+        fstrack<<mpLastKeyFrame->mnId<<" ";
+    fstrack<<"2-"<<mLastFrame.mnId<<" ";
+    fstrack<<mnLastKeyFrameId<<" "<<mnLastRelocFrameId<<" ";
+    fstrack<<mbPublisherStopped<<" "<<mbReseting<<" ";
+    fstrack<<mbForceRelocalisation<<" "<<mbMotionModel<<" ";
+    fstrack<<endl;
 
     cv::Mat im;
 

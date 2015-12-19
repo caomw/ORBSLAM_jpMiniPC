@@ -88,6 +88,9 @@ public:
 
     void CheckResetByPublishers();
 
+    //Added by wangjing
+    void SetLastKeyframe(KeyFrame* _pKF)  {mpLastKeyFrame=_pKF;};
+    void SetLastFrameId(long unsigned int _mFId)    {mnLastKeyFrameId = _mFId;};
 
 protected:
     void GrabImage(const sensor_msgs::ImageConstPtr& msg);

@@ -43,7 +43,7 @@ bool loadMPKFPointers(MapMPIndexPointer &mpIdxPtMap, MapKFIndexPointer &kfIdxPtM
 
 
 // load all data. main function
-bool LoadWroldFromFile(KeyFrameDatabase *db, Map *wd, ORBVocabulary* mpvoc);
+bool LoadWroldFromFile(KeyFrameDatabase *db, Map *wd, ORBVocabulary* mpvoc, KeyFrame *pLastKF);
 
 
 // --------------------------------------------------
@@ -1163,13 +1163,15 @@ void SaveWorldToFile( Map& World, KeyFrameDatabase& Database)
 }
 
 
-bool LoadWroldFromFile(KeyFrameDatabase *db, Map *wd, ORBVocabulary* mpvoc)
+bool LoadWroldFromFile(KeyFrameDatabase *db, Map *wd, ORBVocabulary* mpvoc, KeyFrame *pLastKF)
 {
 	MapMPIndexPointer mpIdxPtMap;
 	MapKFIndexPointer kfIdxPtMap;
 	VecUL vRefKFIdInMP;
 	VecUL vKFmnId,vMPmnId;
     bool ret1,ret2,ret3,ret4;
+
+    long unsigned int maxKFid=0;
 
 	//1 step 1. load and create all mappoints
     cout<<"loading step 1.."<<endl;
@@ -1191,6 +1193,8 @@ bool LoadWroldFromFile(KeyFrameDatabase *db, Map *wd, ORBVocabulary* mpvoc)
 	{
 		KeyFrame* pKF = mit->second;
 		db->add(pKF);
+        if(maxKFid<pKF->mnId)
+            maxKFid = pKF->mnId;
 	}
 
     //1 step5. evaluate nNextId for Frame/MapPoint/KeyFrame
@@ -1225,7 +1229,7 @@ bool LoadWroldFromFile(KeyFrameDatabase *db, Map *wd, ORBVocabulary* mpvoc)
 		}
 	}	
 
-
+    pLastKF = kfIdxPtMap[maxKFid];
 
 	
 	return (ret1&&ret2&&ret3&&ret4);

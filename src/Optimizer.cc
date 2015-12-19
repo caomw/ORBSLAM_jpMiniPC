@@ -538,7 +538,7 @@ void Optimizer::LocalBundleAdjustment(KeyFrame *pKF, bool* pbStopFlag)
 
 
 //Added by wangjing
-void Optimizer::LocalBundleAdjustmentWJ(KeyFrame *pKF, bool* pbStopFlag)
+void LocalBundleAdjustmentWJ(KeyFrame *pKF, bool* pbStopFlag)
 {    
     // Local KeyFrames: First Breath Search from Current Keyframe
     list<KeyFrame*> lLocalKeyFrames;
@@ -987,7 +987,7 @@ void Optimizer::LocalBundleAdjustmentWJ(KeyFrame *pKF, bool* pbStopFlag)
 
 //Added by wangjing
 // all level-1 KF in local map, 7dof optimization in BA. try
-void Optimizer::LocalBundleAdjustmentWJ_All7Dof(KeyFrame *pKF, bool* pbStopFlag)
+void LocalBundleAdjustmentWJ_All7Dof(KeyFrame *pKF, bool* pbStopFlag)
 {    
     // Local KeyFrames: First Breath Search from Current Keyframe
     list<KeyFrame*> lLocalKeyFrames;

@@ -52,14 +52,23 @@ void LoopClosing::SetLocalMapper(LocalMapping *pLocalMapper)
     mpLocalMapper=pLocalMapper;
 }
 
-
+ofstream fsloopclose;
 void LoopClosing::Run()
 {
-
-    ros::Rate r(200);
+    fsloopclose.open("/home/jpubt/catkin_ws/ORB_SLAM/tmp/logLpCls.txt");
+    ros::Rate r(5);//(200);
 
     while(ros::ok())
     {
+        fsloopclose<<ros::Time::now()<<" "<<mbResetRequested<<" "<<mlpLoopKeyFrameQueue.size()<<" ";
+        fsloopclose<<mvfLevelSigmaSquare.size()<<" "<<mnCovisibilityConsistencyTh<<" ";
+        if(mpCurrentKF)
+            fsloopclose<<mpCurrentKF->mnId<<" ";
+        if(mpMatchedKF)
+            fsloopclose<<"-"<<mpMatchedKF->mnId<<" ";
+        fsloopclose<<"1-"<<mvConsistentGroups.size()<<" "<<mvpEnoughConsistentCandidates.size()<<" ";
+        fsloopclose<<mvpCurrentConnectedKFs.size()<<" "<<mvpCurrentMatchedPoints.size()<<" ";
+        fsloopclose<<mvpLoopMapPoints.size()<<" "<<mScale_cw<<" "<<mLastLoopKFid<<endl;
         // Check if there are keyframes in the queue
         if(CheckNewKeyFrames())
         {
