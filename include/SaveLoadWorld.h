@@ -1307,14 +1307,18 @@ void SaveWorldToFile( Map& World, KeyFrameDatabase& Database)
             fmpObs.write(reinterpret_cast<char*>(saveHeader),2);
 			map<KeyFrame*,size_t> observations = pMPi->GetObservations();
 			size_t nObs = observations.size();
+			if(nObs==0)	cerr<<"save nObs=0, shouldn't"<<endl;
 			fmpObs.write(reinterpret_cast<char*>(&nObs),sizeof(size_t));
-			for(std::map<KeyFrame*, size_t>::iterator mit=observations.begin(), mend=observations.end(); mit!=mend; mit++)
+			size_t saveObsCnt=0;
+			for(std::map<KeyFrame*, size_t>::iterator mit=observations.begin(), mend=observations.end(); mit!=mend; mit++, saveObsCnt++)
 			{
 				KeyFrame* pKFm = mit->first;
 				size_t idMPinKF = mit->second;
 				fmpObs.write(reinterpret_cast<char*>(&pKFm->mnId), sizeof(long unsigned int));
 				fmpObs.write(reinterpret_cast<char*>(&idMPinKF), sizeof(size_t));	//KF id and MP index in KF
 			}
+			if(saveObsCnt!=nObs)
+				cerr<<"saveObsCnt!=nObs, shouldn't"<<endl;
 			}
 			//2 ---------------------------
 
@@ -1335,7 +1339,7 @@ void SaveWorldToFile( Map& World, KeyFrameDatabase& Database)
 	//1 3. save keyframe files
 	//1 ------------------------------------------------
 	{
-	fstream fkfVar,fkfKeys,fkfKeysUn,fkfDes,fkfMPids,fkfLPEGs;
+	fstream fkfVar,fkfKeys,fkfKeysUn,fkfDes,fkfMPids,fkfLPEGs,fkfmGrid;
 	cout << endl << "Saving KeyFrames" << endl;
 	strFile = ros::package::getPath("ORB_SLAM")+"/tmp/"+"kfVariables.bin";
 	fkfVar.open(strFile.c_str(), ios::out | ios::binary);
@@ -1355,6 +1359,9 @@ void SaveWorldToFile( Map& World, KeyFrameDatabase& Database)
 	strFile = ros::package::getPath("ORB_SLAM")+"/tmp/"+"kfLoopEdges.bin";
 	fkfLPEGs.open(strFile.c_str(), ios::out | ios::binary);
 
+	strFile = ros::package::getPath("ORB_SLAM")+"/tmp/"+"kfmGrid.bin";
+	fkfmGrid.open(strFile.c_str(), ios::out | ios::binary);
+
     long unsigned int tmpIdx=0;
 	vector<KeyFrame*> vKeyFrames = World.GetAllKeyFrames();
 	for(std::vector<KeyFrame*>::iterator vitKFs=vKeyFrames.begin(), vendKFs=vKeyFrames.end(); vitKFs!=vendKFs; vitKFs++, tmpIdx++)
@@ -1366,7 +1373,7 @@ void SaveWorldToFile( Map& World, KeyFrameDatabase& Database)
 		{
 			//2 3.1 save plain variables
 			//2 -------------------------------
-			// nNextId, mnId, mnFrameId, mTimeStamp, Rcw, tcw
+			// 0xeb,0x90, nNextId, mnId, mnFrameId, mTimeStamp, Rcw, tcw
             fkfVar.write(reinterpret_cast<char*>(saveHeader),2);
 			fkfVar.write(reinterpret_cast<char*>(&pKFi->nNextId), sizeof(long unsigned int));
 			fkfVar.write(reinterpret_cast<char*>(&pKFi->mnId), sizeof(long unsigned int));
@@ -1384,6 +1391,7 @@ void SaveWorldToFile( Map& World, KeyFrameDatabase& Database)
 
 			//2 3.2 save KeyPoints and KeyPointsUn
 			//2 -------------------------------
+			// 0xeb,0x90, nKeys, nKeys*(ptx,pty,size,angle,responsse,  octave,classid)
 			{
 			vector<cv::KeyPoint> mvKeysi = pKFi->GetKeyPoints();
 			size_t nKeys=mvKeysi.size();
@@ -1423,6 +1431,7 @@ void SaveWorldToFile( Map& World, KeyFrameDatabase& Database)
 
 			//2 3.3 save descriptors
 			//2 -------------------------------
+			// 0xeb,0x90, nDes, nDes*(32*uint8)
 			{
 			cv::Mat descriptorsi = pKFi->GetDescriptors();
 			int desnumi = descriptorsi.rows;
@@ -1432,7 +1441,7 @@ void SaveWorldToFile( Map& World, KeyFrameDatabase& Database)
 			{
 				cv::Mat tdes = descriptorsi.row(ti);
 				for(int tj=0;tj<32;tj++)
-					fkfDes.write(reinterpret_cast<char*>(&tdes.at<unsigned char>(tj)),sizeof(unsigned char));
+					fkfDes.write(reinterpret_cast<char*>(&(tdes.at<unsigned char>(tj))),sizeof(unsigned char));
 			}
 			}
 			//2 -------------------------------
@@ -1440,6 +1449,7 @@ void SaveWorldToFile( Map& World, KeyFrameDatabase& Database)
 
 			//2 3.4 save mappoint id
 			//2 -------------------------------
+			// 0xeb,0x90, KF.mnId, nMPs, nMPs*(MPmnId, MPidx)
 			{
 			vector<MapPoint*> vpsi = pKFi->GetMapPointMatches();
             size_t nMPcnt=0;
@@ -1451,7 +1461,7 @@ void SaveWorldToFile( Map& World, KeyFrameDatabase& Database)
 					if(!vit->isBad()) 
             			nMPcnt++;
 			}
-			
+			if(nMPcnt==0)	cerr<<"nMPcnt=0, shouldn't"<<endl;
             fkfMPids.write(reinterpret_cast<char*>(saveHeader),2);
 			fkfMPids.write(reinterpret_cast<char*>(&pKFi->mnId), sizeof(long unsigned int));
 			fkfMPids.write(reinterpret_cast<char*>(&nMPcnt), sizeof(size_t));	//mnId & number of mappoints
@@ -1468,6 +1478,7 @@ void SaveWorldToFile( Map& World, KeyFrameDatabase& Database)
 		                scnt++;
 					}
             }
+			if(scnt==0)	cerr<<"scnt==0, no good mappoint? shouldn't"<<endl;
 			if(scnt!=pKFi->GetMapPoints().size() || scnt!=nMPcnt)
 				cerr<<"scnt!=pKFi->GetMapPoints().size(), shouldn't"<<endl;
 			}
@@ -1476,6 +1487,7 @@ void SaveWorldToFile( Map& World, KeyFrameDatabase& Database)
 			
 			//2 3.5 save loopedges
 			//2 -------------------------------
+			// 0xeb,0x90, KF.mnId, nLPEGs, nLPEGs*(lpKFmnId)
 			{
 			set<KeyFrame*> lpedges = pKFi->GetLoopEdges();
 			size_t nlpegs = lpedges.size();
@@ -1492,6 +1504,29 @@ void SaveWorldToFile( Map& World, KeyFrameDatabase& Database)
 			}
 			}
 			//2 -------------------------------
+
+			//2 3.6 save mGrid
+			//2 -------------------------------
+			// 0xeb,0x90, FRAME_GRID_COLS*FRAME_GRID_ROWS*(gridN, gridN*mGrid_ijk)
+			{
+			vector< vector <vector<size_t> > > mGrid = pKFi->GetmGrid();
+			fkfmGrid.write(reinterpret_cast<char*>(saveHeader),2);
+			for(int i=0; i<FRAME_GRID_COLS;i++)
+		    {
+		        for(int j=0; j<FRAME_GRID_ROWS; j++)
+		        {
+		        	vector<size_t> gridij = mGrid[i][j];
+					size_t gridN=gridij.size();
+					fkfmGrid.write(reinterpret_cast<char*>(&gridN),sizeof(size_t));
+					for(size_t k=0; k<gridN; k++)
+					{
+						fkfmGrid.write(reinterpret_cast<char*>(&gridij[k]),sizeof(size_t));
+					}
+				}
+		    }
+			}
+			//2 -------------------------------
+			
 			
 			kfSaveCnt++;
 			
@@ -1505,6 +1540,7 @@ void SaveWorldToFile( Map& World, KeyFrameDatabase& Database)
 	fkfDes.close();
 	fkfMPids.close();
 	fkfLPEGs.close();
+	fkfmGrid.close();
 
 	cout<<"total "<<kfSaveCnt<<" KeyFrames saved."<<endl;
 	}
@@ -1531,7 +1567,7 @@ void SaveWorldToFile( Map& World, KeyFrameDatabase& Database)
     f.write(reinterpret_cast<char*>(&tFRnNextId),	sizeof(long unsigned int));
     f.write(reinterpret_cast<char*>(&tKFnNextId),	sizeof(long unsigned int));
 	//KeyFrame data
-    KeyFrame* pKF0;
+    KeyFrame* pKF0=static_cast<KeyFrame*>(NULL);
 	vector<KeyFrame*> vpKFt = World.GetAllKeyFrames();
     for(vector<KeyFrame*>::iterator tvit=vpKFt.begin(), tvend=vpKFt.end(); tvit!=tvend; tvit++)
     {
@@ -1541,10 +1577,12 @@ void SaveWorldToFile( Map& World, KeyFrameDatabase& Database)
     }
 	if(pKF0->mnId != 0)
 		cerr<<"pKF0->mnId != 0, shouldn't. Note!!\n!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"<<endl;
+	if(pKF0->isBad())
+		cerr<<"pKF0->isBad(), shouldn't"<<endl;
 	//3 ------------------------------------------------
 	
 	//3 Line2.  KF.nNextID, mfGridElementWidthInv, mfGridElementHeightInv,fx/fy/cx/cy,
-	//3 (cont.) mnMinX,mnMinY,mnMaxX,mnMaxY,mK
+	//3 (cont.) mnMinX,mnMinY,mnMaxX,mnMaxY
 	//3 ------------------------------------------------
     f.write(reinterpret_cast<char*>(&tKFnNextId),	sizeof(long unsigned int));
     f.write(reinterpret_cast<char*>(&pKF0->mfGridElementWidthInv),	sizeof(float));
@@ -1558,7 +1596,7 @@ void SaveWorldToFile( Map& World, KeyFrameDatabase& Database)
         f.write(reinterpret_cast<char*>(&tv[ti]),	sizeof(int));
 	//3 ------------------------------------------------
 	
-	//3 Line3. mnScaleLevels(N), N*mvScaleFactors, N*mvLevelSigma2 for the first 2 KFs. 
+	//3 Line3. mnScaleLevels0(N), N*mvScaleFactors0, N*mvLevelSigma20 for the first 2 KFs. 
 	//3 ------------------------------------------------
 	int mscalelevels=pKF0->GetScaleLevels();
 	f.write(reinterpret_cast<char*>(&mscalelevels),sizeof(int));
@@ -1583,16 +1621,15 @@ void SaveWorldToFile( Map& World, KeyFrameDatabase& Database)
                 break;
 	}
     if(!pKFg) cerr<<"pKFg=NULL, shouldn't"<<endl;
+	
 	int mslevelsg=pKFg->GetScaleLevels();
 	f.write(reinterpret_cast<char*>(&mslevelsg),sizeof(int));
-
-	
     vector<float> sfactorsg =  pKFg->GetScaleFactors();
     for(int i=0;i<mslevelsg;i++)
-		f.write(reinterpret_cast<char*>(&sfactorsg[i]),sizeof(int));
+		f.write(reinterpret_cast<char*>(&sfactorsg[i]),sizeof(float));
     vector<float> lsigma2g = pKFg->GetVectorScaleSigma2();	//mvInvLevelSigma2 is 1/mvLevelSigma2
     for(int i=0;i<mslevelsg;i++)
-		f.write(reinterpret_cast<char*>(&lsigma2g[i]),sizeof(int));
+		f.write(reinterpret_cast<char*>(&lsigma2g[i]),sizeof(float));
     if((size_t)mslevelsg!=sfactorsg.size() || (size_t)mslevelsg!=lsigma2g.size())
 		cerr<<"mslevelsg!=sfactorsg.size() || mslevelsg!=lsigma2g.size()"<<endl;
 	//3 ------------------------------------------------
@@ -1654,7 +1691,7 @@ bool loadMPVariables(KeyFrameDatabase *db, Map *wd, MapMPIndexPointer *mpIdxPtMa
 	VecUL VecMPmnId(mpSaveCnt);
 
 	Frame tmpFrame;
-    tmpFrame.mTcw = Mat::zeros(4,4,CV_32F);
+    tmpFrame.mTcw = Mat::eye(4,4,CV_32F);
     KeyFrame * tmpKF = new KeyFrame(tmpFrame, wd, db);
 
 
@@ -1729,9 +1766,9 @@ bool loadMPVariables(KeyFrameDatabase *db, Map *wd, MapMPIndexPointer *mpIdxPtMa
 //		tmpMP->SetMinDistance(mfMaxDistance);
 //		tmpMP->SetMaxDistance(mfMaxDistance);
 
-
 		//record reference KF id of this mappoint
 		vRefKFIdInMP[linecnt] = mpRefKFId;
+
 		//record mnId
 		VecMPmnId[linecnt] = mnId;
 
@@ -1770,11 +1807,12 @@ bool loadMPVariables(KeyFrameDatabase *db, Map *wd, MapMPIndexPointer *mpIdxPtMa
 bool loadKFVariables(KeyFrameDatabase *db, Map *wd, ORBVocabulary* mpvoc,
 	MapKFIndexPointer *kfIdxPtMap, VecUL &_VecKFmnId)
 {
-	fstream ifkfVar,ifkfKeys,ifkfKeysUn,ifkfDes,ifGlobal;
+	fstream ifkfVar,ifkfKeys,ifkfKeysUn,ifkfDes,ifkfmGrid,ifGlobal;
 	if(	!myOpenFile(ifkfVar,	string(ros::package::getPath("ORB_SLAM")+"/tmp/"+"kfVariables.bin")) 	||
 		!myOpenFile(ifkfKeys,	string(ros::package::getPath("ORB_SLAM")+"/tmp/"+"kfKeyPoints.bin")) 	||
 		!myOpenFile(ifkfKeysUn,	string(ros::package::getPath("ORB_SLAM")+"/tmp/"+"kfKeyPointsUn.bin")) 	||
 		!myOpenFile(ifkfDes,	string(ros::package::getPath("ORB_SLAM")+"/tmp/"+"kfDescriptors.bin"))	||
+		!myOpenFile(ifkfmGrid,	string(ros::package::getPath("ORB_SLAM")+"/tmp/"+"kfmGrid.bin"))		||
 		!myOpenFile(ifGlobal,	string(ros::package::getPath("ORB_SLAM")+"/tmp/"+"GlobalParams.bin"))   )
 	{	
 		return false;
@@ -1785,11 +1823,11 @@ bool loadKFVariables(KeyFrameDatabase *db, Map *wd, ORBVocabulary* mpvoc,
 	
 	long unsigned int tMPnNextId,mpSaveCnt,kfSaveCnt,tFRnNextId,tKFnNextId;
 	float mfGridElementWidthInv, mfGridElementHeightInv, fx, fy, cx, cy;
+	int mnMinX,mnMinY,mnMaxX,mnMaxY;
 	int mnScaleLevels0, mnScaleLevelsOther;
     std::vector<float> mvScaleFactors0,mvScaleFactorsOther;
     std::vector<float> mvLevelSigma20,mvLevelSigma2Other;
     std::vector<float> mvInvLevelSigma20,mvInvLevelSigma2Other;
-	int mnMinX,mnMinY,mnMaxX,mnMaxY;
 	{
 	//3 Line1. MP.nNextID, mpSaveCnt, kfSaveCnt, Frame::nNextId, KeyFrame::nNextId
 	//3 ------------------------------------------------
@@ -1810,7 +1848,7 @@ bool loadKFVariables(KeyFrameDatabase *db, Map *wd, ORBVocabulary* mpvoc,
 
 	{
 	//3 Line2.  KF.nNextID, mfGridElementWidthInv, mfGridElementHeightInv,fx/fy/cx/cy,
-	//3 (cont.) mnMinX,mnMinY,mnMaxX,mnMaxY,mK
+	//3 (cont.) mnMinX,mnMinY,mnMaxX,mnMaxY
 	//3 ------------------------------------------------
 	ifGlobal.read(reinterpret_cast<char*>(&tKFnNextId),	sizeof(long unsigned int));
 	ifGlobal.read(reinterpret_cast<char*>(&mfGridElementWidthInv),	sizeof(float));
@@ -1819,10 +1857,10 @@ bool loadKFVariables(KeyFrameDatabase *db, Map *wd, ORBVocabulary* mpvoc,
 	ifGlobal.read(reinterpret_cast<char*>(&fy),	sizeof(float));
 	ifGlobal.read(reinterpret_cast<char*>(&cx),	sizeof(float));
 	ifGlobal.read(reinterpret_cast<char*>(&cy),	sizeof(float));
-	ifGlobal.read(reinterpret_cast<char*>(&mnMinX),	sizeof(float));
-	ifGlobal.read(reinterpret_cast<char*>(&mnMinY),	sizeof(float));
-	ifGlobal.read(reinterpret_cast<char*>(&mnMaxX),	sizeof(float));
-	ifGlobal.read(reinterpret_cast<char*>(&mnMaxY),	sizeof(float));
+	ifGlobal.read(reinterpret_cast<char*>(&mnMinX),	sizeof(int));
+	ifGlobal.read(reinterpret_cast<char*>(&mnMinY),	sizeof(int));
+	ifGlobal.read(reinterpret_cast<char*>(&mnMaxX),	sizeof(int));
+	ifGlobal.read(reinterpret_cast<char*>(&mnMaxY),	sizeof(int));
 	//3 ------------------------------------------------
 	}
 
@@ -1911,7 +1949,7 @@ bool loadKFVariables(KeyFrameDatabase *db, Map *wd, ORBVocabulary* mpvoc,
 		//2 3.1 save plain variables - read
 		{
 		//2 -------------------------------
-		// nNextId, mnId, mnFrameId, mTimeStamp, Rcw, tcw
+		// 0xeb,0x90, nNextId, mnId, mnFrameId, mTimeStamp, Rcw, tcw
 		//public
 		double mTimeStamp;
 		//protected
@@ -1963,6 +2001,7 @@ bool loadKFVariables(KeyFrameDatabase *db, Map *wd, ORBVocabulary* mpvoc,
 		//2 3.2 save KeyPoints and KeyPointsUn - read
 		{
 		//2 -------------------------------
+		// 0xeb,0x90, nKeys, nKeys*(ptx,pty,size,angle,responsse,  octave,classid)
 		{
 		vector<cv::KeyPoint> tmvKeys;
 		size_t kpn;
@@ -1972,7 +2011,8 @@ bool loadKFVariables(KeyFrameDatabase *db, Map *wd, ORBVocabulary* mpvoc,
 		
 		ifkfKeys.read(reinterpret_cast<char*>(&kpn), sizeof(size_t));
 		tmvKeys.resize(kpn);
-		for(size_t vit=0;vit<kpn;vit++)
+		//for(size_t vit=0;vit<kpn;vit++)
+		for(vector<cv::KeyPoint>::iterator vitkeys=tmvKeys.begin(), vendkeys=tmvKeys.end(); vitkeys!=vendkeys; vitkeys++)
 		{				
 			float ptx,pty,size,angle,response;
 			int octave,classid;
@@ -1983,8 +2023,9 @@ bool loadKFVariables(KeyFrameDatabase *db, Map *wd, ORBVocabulary* mpvoc,
 			ifkfKeys.read(reinterpret_cast<char*>(&response), sizeof(float));
 			ifkfKeys.read(reinterpret_cast<char*>(&octave), sizeof(int));
 			ifkfKeys.read(reinterpret_cast<char*>(&classid), sizeof(int));
-			tmvKeys[vit] = cv::KeyPoint(ptx,pty,size,angle,response,octave,classid);
-            if(ifkfKeys.fail())  cerr<<"loopcnt: "<<skfcnt<<" mnId "<<mnId<<" ifkfKeys fail. shouldn't"<<endl;
+			//tmvKeys[vit] = cv::KeyPoint(ptx,pty,size,angle,response,octave,classid);
+			*vitkeys = cv::KeyPoint(ptx,pty,size,angle,response,octave,classid);
+			if(ifkfKeys.fail())  cerr<<"loopcnt: "<<skfcnt<<" mnId "<<mnId<<" ifkfKeys fail. shouldn't"<<endl;
 		}
 		tmpKF->SetKeyPoints(tmvKeys);
 		}
@@ -2001,7 +2042,8 @@ bool loadKFVariables(KeyFrameDatabase *db, Map *wd, ORBVocabulary* mpvoc,
 
         ifkfKeysUn.read(reinterpret_cast<char*>(&kpun), sizeof(size_t));
 		tmvKeysUn.resize(kpun);
-		for(size_t vit=0;vit<kpun;vit++)
+		//for(size_t vit=0;vit<kpun;vit++)
+		for(vector<cv::KeyPoint>::iterator vitkeysun=tmvKeysUn.begin(), vendkeysun=tmvKeysUn.end(); vitkeysun!=vendkeysun; vitkeysun++)
 		{				
 			float ptx,pty,size,angle,response;
 			int octave,classid;
@@ -2012,8 +2054,9 @@ bool loadKFVariables(KeyFrameDatabase *db, Map *wd, ORBVocabulary* mpvoc,
 			ifkfKeysUn.read(reinterpret_cast<char*>(&response), sizeof(float));
 			ifkfKeysUn.read(reinterpret_cast<char*>(&octave), sizeof(int));
 			ifkfKeysUn.read(reinterpret_cast<char*>(&classid), sizeof(int));
-			tmvKeysUn[vit] = cv::KeyPoint(ptx,pty,size,angle,response,octave,classid);
-            if(ifkfKeysUn.fail())  cerr<<"loopcnt: "<<skfcnt<<" mnId "<<mnId<<" ifkfKeysUn fail. shouldn't"<<endl;
+			//tmvKeysUn[vit] = cv::KeyPoint(ptx,pty,size,angle,response,octave,classid);
+			*vitkeysun = cv::KeyPoint(ptx,pty,size,angle,response,octave,classid);
+			if(ifkfKeysUn.fail())  cerr<<"loopcnt: "<<skfcnt<<" mnId "<<mnId<<" ifkfKeysUn fail. shouldn't"<<endl;
 		}
 		tmpKF->SetKeyPointsUn(tmvKeysUn);
 //		std::vector<cv::KeyPoint> mvKeysUn;
@@ -2022,9 +2065,10 @@ bool loadKFVariables(KeyFrameDatabase *db, Map *wd, ORBVocabulary* mpvoc,
 		}
 
 		
-		//2 3.3 save descriptors
+		//2 3.3 save descriptors - read
 		//3 kfDescriptors.txt
 		//2 -------------------------------
+		// 0xeb,0x90, nDes, nDes*(32*uint8)
         {
         int desnumi;
         ifkfDes.read(reinterpret_cast<char*>(hd),2);
@@ -2038,7 +2082,7 @@ bool loadKFVariables(KeyFrameDatabase *db, Map *wd, ORBVocabulary* mpvoc,
 		{
 			cv::Mat tdes = cv::Mat::zeros(1,32,CV_8U);;
 			for(int tj=0;tj<32;tj++)
-				ifkfDes.read(reinterpret_cast<char*>(&tdes.at<unsigned char>(tj)),sizeof(unsigned char));
+				ifkfDes.read(reinterpret_cast<char*>(&(tdes.at<unsigned char>(tj))),sizeof(unsigned char));
             tdes.copyTo(matDes.row(ti));
             if(ifkfDes.fail())  cerr<<"loopcnt: "<<skfcnt<<" mnId "<<mnId<<" ifkfDes fail. shouldn't"<<endl;
 		}
@@ -2049,6 +2093,37 @@ bool loadKFVariables(KeyFrameDatabase *db, Map *wd, ORBVocabulary* mpvoc,
 //		DBoW2::FeatureVector mFeatVec;
 		}
 		//2 -------------------------------
+
+		//2 3.6 save mGrid
+		//2 -------------------------------
+		// 0xeb,0x90, FRAME_GRID_COLS*FRAME_GRID_ROWS*(gridN, gridN*mGrid_ijk)
+		{
+		vector< vector <vector<size_t> > > mGrid;
+        ifkfmGrid.read(reinterpret_cast<char*>(hd),2);
+		if(hd[0]!=0xeb || hd[1]!=0x90)
+            cerr<<"header error kfmGrid, shouldn't"<<endl;
+		mGrid.resize(FRAME_GRID_COLS);
+		for(int i=0; i<FRAME_GRID_COLS;i++)
+		{
+			mGrid[i].resize(FRAME_GRID_ROWS);
+			for(int j=0; j<FRAME_GRID_ROWS; j++)
+			{
+				size_t gridN;
+				ifkfmGrid.read(reinterpret_cast<char*>(&gridN),sizeof(size_t));
+				vector<size_t> gridij(gridN);
+				for(size_t k=0; k<gridN; k++)
+				{
+					ifkfmGrid.read(reinterpret_cast<char*>(&gridij[k]),sizeof(size_t));
+				}
+				mGrid[i][j] = gridij;
+			}
+		}
+		tmpKF->SetmGrid(mGrid);
+		if(ifkfmGrid.fail())	cerr<<"ifkfmGrid.fail(), shouldn't"<<endl;
+		//std::vector< std::vector <std::vector<size_t> > > mGrid
+		}
+		//2 -------------------------------
+
 
 		//record the mnId order
 		VecKFmnId[linecnt] = mnId;
@@ -2076,6 +2151,7 @@ bool loadKFVariables(KeyFrameDatabase *db, Map *wd, ORBVocabulary* mpvoc,
 	ifkfKeysUn.close();
 	ifkfDes.close();
 	ifGlobal.close();
+	ifkfmGrid.close();
 
 	return true;
 }
@@ -2124,6 +2200,7 @@ bool loadMPKFPointers(MapMPIndexPointer &mpIdxPtMap, MapKFIndexPointer &kfIdxPtM
         KeyFrame* pkFref = kfIdxPtMap[vRefKFIdInMP[i]];    //Keyframe pointer to ReferenceKF
         pMP->SetRefKFPointer(pkFref);	//set mpRefKF
 		//	tmpMP.mpRefKF;
+		
         unsigned char hd[2];
 
 		//2 2.2 save observations - read
@@ -2135,7 +2212,7 @@ bool loadMPKFPointers(MapMPIndexPointer &mpIdxPtMap, MapKFIndexPointer &kfIdxPtM
 			cerr<<"header error mpObservations, shouldn't"<<endl;
 		size_t nObs;
 		ifmpObs.read(reinterpret_cast<char*>(&nObs),sizeof(size_t));
-		if(nObs==0)	cerr<<"nObs==0, shouldn't"<<endl;
+		if(nObs==0)	cerr<<"read nObs==0, shouldn't"<<endl;
 		for(size_t j=0;j<nObs;j++)
 		{
 			long unsigned int kfIdj; size_t obIdj;	//mnId of KF see this MP, and id of observation
@@ -2143,12 +2220,15 @@ bool loadMPKFPointers(MapMPIndexPointer &mpIdxPtMap, MapKFIndexPointer &kfIdxPtM
 			ifmpObs.read(reinterpret_cast<char*>(&obIdj), sizeof(size_t));	//KF id and MP index in KF
             if(kfIdxPtMap.count(kfIdj)==0)
             {
-
                 cerr<<kfIdj<<" no KF id of this observation, shouldn't"<<endl;
                 cerr<<endl;
             }
-			KeyFrame* pKF = kfIdxPtMap[kfIdj];	//KF
-            pMP->AddObservation(pKF,obIdj);		//add observation
+			else	//ignore wrong ones
+			{
+				KeyFrame* pKF = kfIdxPtMap[kfIdj];	//KF
+	            pMP->AddObservation(pKF,obIdj);		//add observation
+			}
+			if(ifmpObs.fail())	cerr<<"ifmpObs.fail(), shouldn't"<<endl;
 		}
 		//2 ---------------------------
 	}
@@ -2168,6 +2248,7 @@ bool loadMPKFPointers(MapMPIndexPointer &mpIdxPtMap, MapKFIndexPointer &kfIdxPtM
 		//4. kfMapPointsID, for pKF->mvpMapPoints
 		//2 3.4 save mappoint id - read
 		//2 -------------------------------
+		// 0xeb,0x90, KF.mnId, nMPs, nMPs*(MPmnId, MPidx)
 		{
 		long unsigned int kfmnIdread;
 		size_t nMPid;
@@ -2181,6 +2262,7 @@ bool loadMPKFPointers(MapMPIndexPointer &mpIdxPtMap, MapKFIndexPointer &kfIdxPtM
 
 		//KeyPoint number, size of mvpMapPoints
         size_t kpN = pKF->GetKeyPoints().size();
+		if(kpN==0)	cerr<<"kpN==0 when read mappoint id, shouldn't"<<endl;
 		vector<MapPoint*> mvpMPs = vector<MapPoint*>(kpN,static_cast<MapPoint*>(NULL));
 		pKF->SetmvpMapPoints(mvpMPs);	//init mvpMapPoint as NULL (size = KeyPoints.size())
 
@@ -2209,6 +2291,7 @@ bool loadMPKFPointers(MapMPIndexPointer &mpIdxPtMap, MapKFIndexPointer &kfIdxPtM
         //5. kfLoopEdges, load kf id
     	//2 3.5 save loopedges
 		//2 -------------------------------
+		// 0xeb,0x90, KF.mnId, nLPEGs, nLPEGs*(lpKFmnId)
 		{
         long unsigned int kfmnIdread;
         size_t nLPEGid;
@@ -2226,6 +2309,7 @@ bool loadMPKFPointers(MapMPIndexPointer &mpIdxPtMap, MapKFIndexPointer &kfIdxPtM
 				ifkfLPEGs.read(reinterpret_cast<char*>(&tkfmnId), sizeof(long unsigned int));
 	            pKF->AddLoopEdge(kfIdxPtMap[tkfmnId]);
 	        }
+		if(ifkfLPEGs.fail())	cerr<<"ifkfLPEGs.fail(), shouldn't"<<endl;
         //pKF->mspLoopEdges
         //		std::set<KeyFrame*> mspLoopEdges;
 		//2 -------------------------------
@@ -2266,9 +2350,9 @@ bool loadMPKFPointers(MapMPIndexPointer &mpIdxPtMap, MapKFIndexPointer &kfIdxPtM
 			cerr<<"MapPoint pre Id > cur Id, shouldn't."<<endl;
 		preidxmp=pMPm->mnId;
 	}
-	//    mfMinDistance ;
-	//    mfMaxDistance ;
-	//    mNormalVector ;
+	//		float mfMinDistance;
+    //		float mfMaxDistance;
+	//		cv::Mat mNormalVector;
 	}
 	
 	ifkfMPids.close();
