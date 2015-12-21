@@ -157,11 +157,11 @@ bool loadMPVariables(KeyFrameDatabase *db, Map *wd, MapMPIndexPointer *mpIdxPtMa
 		tmpMP->mnId = mnId;
 		tmpMP->mnFirstKFid = mnFirstKFid;
 		
-		tmpMP->mTrackProjX = mTrackProjX;
-		tmpMP->mTrackProjY = mTrackProjY;
-		tmpMP->mbTrackInView = mbTrackInView;
-		tmpMP->mnTrackScaleLevel = mnTrackScaleLevel;
-		tmpMP->mTrackViewCos = mTrackViewCos;
+        tmpMP->mTrackProjX = mTrackProjX;
+        tmpMP->mTrackProjY = mTrackProjY;
+        tmpMP->mbTrackInView = mbTrackInView;
+        tmpMP->mnTrackScaleLevel = mnTrackScaleLevel;
+        tmpMP->mTrackViewCos = mTrackViewCos;
 		
 		tmpMP->mnTrackReferenceForFrame = 0;//mnTrackReferenceForFrame;
 		tmpMP->mnLastFrameSeen = 0;//mnLastFrameSeen;
@@ -783,38 +783,38 @@ void SaveWorldToFile( Map& World, KeyFrameDatabase& Database)
 			{
 			fmpVar << pMPi->nNextId << " ";
 			fmpVar << pMPi->mnId << " ";
-			fmpVar << pMPi->mnFirstKFid << " ";
-			fmpVar << pMPi->mTrackProjX << " ";
-			fmpVar << pMPi->mTrackProjY << " ";
+            fmpVar << pMPi->mnFirstKFid << " ";
+            fmpVar << pMPi->mTrackProjX << " ";
+            fmpVar << pMPi->mTrackProjY << " ";
 			
-			fmpVar << pMPi->mbTrackInView << " ";
-			fmpVar << pMPi->mnTrackScaleLevel << " ";
-			fmpVar << pMPi->mTrackViewCos << " ";
-			fmpVar << pMPi->mnTrackReferenceForFrame << " ";
-			fmpVar << pMPi->mnLastFrameSeen << " ";
+            fmpVar << pMPi->mbTrackInView << " ";
+            fmpVar << pMPi->mnTrackScaleLevel << " ";
+            fmpVar << pMPi->mTrackViewCos << " ";
+            fmpVar << pMPi->mnTrackReferenceForFrame << " ";
+            fmpVar << pMPi->mnLastFrameSeen << " ";
 			
-			fmpVar << pMPi->mnBALocalForKF << " ";
-			fmpVar << pMPi->mnFuseCandidateForKF << " ";
-			fmpVar << pMPi->mnLoopPointForKF << " ";
-			fmpVar << pMPi->mnCorrectedByKF << " ";
-			fmpVar << pMPi->mnCorrectedReference << " ";
+            fmpVar << pMPi->mnBALocalForKF << " ";
+            fmpVar << pMPi->mnFuseCandidateForKF << " ";
+            fmpVar << pMPi->mnLoopPointForKF << " ";
+            fmpVar << pMPi->mnCorrectedByKF << " ";
+            fmpVar << pMPi->mnCorrectedReference << " ";
 			// protected
 			fmpVar << setprecision(10);
 			cv::Mat twp = pMPi->GetWorldPos();
 			fmpVar << twp.at<float>(0) <<" "<< twp.at<float>(1) <<" "<< twp.at<float>(2) <<" ";
 			fmpVar << setprecision(7);
-			cv::Mat tnv = pMPi->GetNormal();
-			fmpVar << tnv.at<float>(0) <<" "<< tnv.at<float>(1) <<" "<< tnv.at<float>(2) <<" ";
+            cv::Mat tnv = pMPi->GetNormal();
+            fmpVar << tnv.at<float>(0) <<" "<< tnv.at<float>(1) <<" "<< tnv.at<float>(2) <<" ";
 			cv::Mat tdes = pMPi->GetDescriptor();	//256b, 8*uint32_t
 			const uint32_t *tpdes = tdes.ptr<uint32_t>();
 			for(int ti=0; ti<8; ti++)
 			{
 				fmpVar << tpdes[ti] <<" ";
 			}
-			fmpVar << pMPi->GetmnVisible() <<" ";
-			fmpVar << pMPi->GetmnFound() <<" ";
-			fmpVar << pMPi->GetMinDistanceInvariance() <<" ";
-			fmpVar << pMPi->GetMaxDistanceInvariance() <<" ";
+            fmpVar << pMPi->GetmnVisible() <<" ";
+            fmpVar << pMPi->GetmnFound() <<" ";
+            fmpVar << pMPi->GetMinDistanceInvariance() <<" ";
+            fmpVar << pMPi->GetMaxDistanceInvariance() <<" ";
 			fmpVar << pMPi->GetReferenceKeyFrame()->mnId <<" ";
 			fmpVar << std::endl;
 			}
@@ -1284,12 +1284,25 @@ void SaveWorldToFile( Map& World, KeyFrameDatabase& Database)
 		{
 			//2 2.1 save plain variable
 			//2 ---------------------------
-			// 0xeb,0x90,nNextId,mnId,mnFirstKFid,WorldPos,mDescriptor,mpRefKF
+            // 0xeb,0x90,nNextId,mnId,mnFirstKFid,mTrackPorjX,mTrackProjY,mbTrackInView,mnTrackScaleLevel,mTrackViewCos,
+            //  WorldPos,mDescriptor,mpRefKF
 			{
             fmpVar.write(reinterpret_cast<char*>(saveHeader),2);
 			fmpVar.write(reinterpret_cast<char*>(&pMPi->nNextId),sizeof(long unsigned int));
 			fmpVar.write(reinterpret_cast<char*>(&pMPi->mnId),sizeof(long unsigned int));
 			fmpVar.write(reinterpret_cast<char*>(&pMPi->mnFirstKFid),sizeof(long int));
+            fmpVar.write(reinterpret_cast<char*>(&pMPi->mTrackProjX),sizeof(float));
+            fmpVar.write(reinterpret_cast<char*>(&pMPi->mTrackProjY),sizeof(float));
+            fmpVar.write(reinterpret_cast<char*>(&pMPi->mbTrackInView),sizeof(bool));
+            fmpVar.write(reinterpret_cast<char*>(&pMPi->mnTrackScaleLevel),sizeof(int));
+            fmpVar.write(reinterpret_cast<char*>(&pMPi->mTrackViewCos),sizeof(float));
+            fmpVar.write(reinterpret_cast<char*>(&pMPi->mnTrackReferenceForFrame),	sizeof(long unsigned int));
+            fmpVar.write(reinterpret_cast<char*>(&pMPi->mnLastFrameSeen),	sizeof(long unsigned int));
+            fmpVar.write(reinterpret_cast<char*>(&pMPi->mnBALocalForKF),	sizeof(long unsigned int));
+            fmpVar.write(reinterpret_cast<char*>(&pMPi->mnFuseCandidateForKF),	sizeof(long unsigned int));
+            fmpVar.write(reinterpret_cast<char*>(&pMPi->mnLoopPointForKF),	sizeof(long unsigned int));
+            fmpVar.write(reinterpret_cast<char*>(&pMPi->mnCorrectedByKF),	sizeof(long unsigned int));
+            fmpVar.write(reinterpret_cast<char*>(&pMPi->mnCorrectedReference),	sizeof(long unsigned int));
 			// protected
 			cv::Mat twp = pMPi->GetWorldPos();
 			for(int ti=0;ti<3;ti++)
@@ -1767,12 +1780,18 @@ bool loadMPVariables(KeyFrameDatabase *db, Map *wd, MapMPIndexPointer *mpIdxPtMa
         unsigned char hd[2];	//header1=0xeb,header2=0x90.
 		
 		//2 2.1 read plain variable
-		//2 ---------------------------
-		// 0xeb,0x90,nNextId,mnId,mnFirstKFid,WorldPos,mDescriptor,mpRefKF
+        //2 ---------------------------
+        // 0xeb,0x90,nNextId,mnId,mnFirstKFid,mTrackPorjX,mTrackProjY,mbTrackInView,mnTrackScaleLevel,mTrackViewCos,
+        // mnTrackReferenceForFrame,mnLastFrameSeen,mnBALocalForKF,mnFuseCandidateForKF,mnLoopPointForKF,mnCorrectedByKF,mnCorrectedReference
+        //  WorldPos,mDescriptor,mpRefKF
 		// plain variables in MapPoint
 		unsigned long int nNextId;
 		long unsigned int mnId, mpRefKFId;
 		long int mnFirstKFid;
+        float mTrackProjX,mTrackProjY,mTrackViewCos;
+        bool mbTrackInView;
+        int mnTrackScaleLevel;
+        long unsigned int mnTrackReferenceForFrame,mnLastFrameSeen,mnBALocalForKF,mnFuseCandidateForKF,mnLoopPointForKF,mnCorrectedByKF,mnCorrectedReference;
 		Mat mWorldPos = Mat::zeros(3, 1, CV_32F);
 		Mat mDescriptor = Mat::zeros(1, 32, CV_8UC1);
 		{
@@ -1782,6 +1801,18 @@ bool loadMPVariables(KeyFrameDatabase *db, Map *wd, MapMPIndexPointer *mpIdxPtMa
 		ifs.read(reinterpret_cast<char*>(&nNextId),	sizeof(long unsigned int));
 		ifs.read(reinterpret_cast<char*>(&mnId),	sizeof(long unsigned int));
 		ifs.read(reinterpret_cast<char*>(&mnFirstKFid),	sizeof(long int));
+        ifs.read(reinterpret_cast<char*>(&mTrackProjX),sizeof(float));
+        ifs.read(reinterpret_cast<char*>(&mTrackProjY),sizeof(float));
+        ifs.read(reinterpret_cast<char*>(&mbTrackInView),sizeof(bool));
+        ifs.read(reinterpret_cast<char*>(&mnTrackScaleLevel),sizeof(int));
+        ifs.read(reinterpret_cast<char*>(&mTrackViewCos),sizeof(float));
+        ifs.read(reinterpret_cast<char*>(&mnTrackReferenceForFrame),	sizeof(long unsigned int));
+        ifs.read(reinterpret_cast<char*>(&mnLastFrameSeen),	sizeof(long unsigned int));
+        ifs.read(reinterpret_cast<char*>(&mnBALocalForKF),	sizeof(long unsigned int));
+        ifs.read(reinterpret_cast<char*>(&mnFuseCandidateForKF),	sizeof(long unsigned int));
+        ifs.read(reinterpret_cast<char*>(&mnLoopPointForKF),	sizeof(long unsigned int));
+        ifs.read(reinterpret_cast<char*>(&mnCorrectedByKF),	sizeof(long unsigned int));
+        ifs.read(reinterpret_cast<char*>(&mnCorrectedReference),	sizeof(long unsigned int));
 		// protected
 		for(int ti=0;ti<3;ti++)
 		{
@@ -1810,18 +1841,18 @@ bool loadMPVariables(KeyFrameDatabase *db, Map *wd, MapMPIndexPointer *mpIdxPtMa
 		tmpMP->mnId = mnId;
 		tmpMP->mnFirstKFid = mnFirstKFid;
 		
-		tmpMP->mTrackProjX = 0;//mTrackProjX;
-		tmpMP->mTrackProjY = 0;//mTrackProjY;
-		tmpMP->mbTrackInView = 0;//mbTrackInView;
-		tmpMP->mnTrackScaleLevel = 0;//mnTrackScaleLevel;
-		tmpMP->mTrackViewCos = 0;//mTrackViewCos;
-		tmpMP->mnTrackReferenceForFrame = 0;//mnTrackReferenceForFrame;
-		tmpMP->mnLastFrameSeen = 0;//mnLastFrameSeen;
-		tmpMP->mnBALocalForKF = 0;//mnBALocalForKF;
-		tmpMP->mnFuseCandidateForKF = 0;//mnFuseCandidateForKF;
-		tmpMP->mnLoopPointForKF = 0;//mnLoopPointForKF;
-		tmpMP->mnCorrectedByKF = 0;//mnCorrectedByKF;
-		tmpMP->mnCorrectedReference = 0;//mnCorrectedReference;
+        tmpMP->mTrackProjX = mTrackProjX;
+        tmpMP->mTrackProjY = mTrackProjY;
+        tmpMP->mbTrackInView = mbTrackInView;
+        tmpMP->mnTrackScaleLevel = mnTrackScaleLevel;
+        tmpMP->mTrackViewCos = mTrackViewCos;
+        tmpMP->mnTrackReferenceForFrame = mnTrackReferenceForFrame;
+        tmpMP->mnLastFrameSeen = mnLastFrameSeen;
+        tmpMP->mnBALocalForKF = mnBALocalForKF;
+        tmpMP->mnFuseCandidateForKF = mnFuseCandidateForKF;
+        tmpMP->mnLoopPointForKF = mnLoopPointForKF;
+        tmpMP->mnCorrectedByKF = mnCorrectedByKF;
+        tmpMP->mnCorrectedReference = mnCorrectedReference;
 		
 		//protected
 		tmpMP->SetWorldPos(mWorldPos);
