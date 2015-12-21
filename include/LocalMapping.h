@@ -66,6 +66,10 @@ public:
 
     void InterruptBA();
 
+	//Added by wangjing
+	std::list<MapPoint*> GetmlpRecentAddedMapPoints(void)		{return mlpRecentAddedMapPoints;};
+	void SetmlpRecentAddedMapPoints(std::list<MapPoint*> _tl)	{mlpRecentAddedMapPoints=_tl;};
+
 protected:
 
     bool CheckNewKeyFrames();
