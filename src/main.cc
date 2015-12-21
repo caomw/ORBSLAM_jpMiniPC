@@ -139,7 +139,8 @@ int main(int argc, char **argv)
 //    fsloopclose<<"mvpCurrentConnectedKFs.size()"<<" "<<"mvpCurrentMatchedPoints.size()"<<" ";
 //    fsloopclose<<"mvpLoopMapPoints.size()"<<" "<<"mScale_cw"<<" "<<"mLastLoopKFid"<<endl;
 
-    bool bReadOK = LoadWroldFromFile(&Database, &World, &Vocabulary, tpLastKF);
+    //MapMPIndexPointer mpIdxPtMap;
+    bool bReadOK = LoadWroldFromFile(&Database, &World, &Vocabulary, tpLastKF);//, mpIdxPtMap);
     if(bReadOK)
     {
         cout<<"load world file successfully."<<endl;
@@ -179,6 +180,13 @@ int main(int argc, char **argv)
     //Initialize the Local Mapping Thread and launch
     ORB_SLAM::LocalMapping LocalMapper(&World);
     boost::thread localMappingThread(&ORB_SLAM::LocalMapping::Run,&LocalMapper);
+
+//    //Added by wangjing
+//    if(bReadOK)
+//    {
+//        LoadLocalMapThread(&LocalMapper,mpIdxPtMap);
+//    }
+
 
     //Initialize the Loop Closing Thread and launch
     ORB_SLAM::LoopClosing LoopCloser(&World, &Database, &Vocabulary);
@@ -239,6 +247,7 @@ int main(int argc, char **argv)
     //3 ------------------------------------
     //Added by wangjing
     SaveWorldToFile(World,Database);
+//    SaveLocalMapThread(&LocalMapper);
 //    fstrack.close();
 //    fslocalmap.close();
 //    fsloopclose.close();

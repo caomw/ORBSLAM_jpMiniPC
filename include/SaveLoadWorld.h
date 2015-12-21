@@ -10,7 +10,7 @@
 #include <MapPoint.h>
 #include <Map.h>
 #include <KeyFrameDatabase.h>
-#include <LocalMapping>
+#include <LocalMapping.h>
 
 #include<ros/ros.h>
 #include<ros/package.h>
@@ -1643,60 +1643,69 @@ void SaveWorldToFile( Map& World, KeyFrameDatabase& Database)
 
 }
 
-void SaveLocalMapThread(LocalMapping* pLM)
-{
+//void SaveLocalMapThread(LocalMapping* pLM)
+//{
 
 	
-	//1 5. save local mappint params
-	//1 ------------------------------------------------
+//	//1 5. save local mappint params
+//	//1 ------------------------------------------------
 	
-	fstream flm;
-	cout<<endl<<"Saving local mapping params"<<endl;
-	strFile = ros::package::getPath("ORB_SLAM")+"/tmp/"+"LocalMapParams.bin";
-	flm.open(strFile.c_str(), ios::out|ios::binary);
+//	fstream flm;
+//	cout<<endl<<"Saving local mapping params"<<endl;
+//    string strFile = ros::package::getPath("ORB_SLAM")+"/tmp/"+"LocalMapParams.bin";
+//	flm.open(strFile.c_str(), ios::out|ios::binary);
 
-	list<MapPoint*> lMPinLM = pLM->GetmlpRecentAddedMapPoints();
-	size_t rampsize = lMPinLM.size();
-	flm.write(reinterpret_cast<char*>(&rampsize),sizeof(size_t));
+//	list<MapPoint*> lMPinLM = pLM->GetmlpRecentAddedMapPoints();
+//	size_t rampsize = lMPinLM.size();
+//	flm.write(reinterpret_cast<char*>(&rampsize),sizeof(size_t));
 	
-	for(list<MapPoint*>::iterator lit=lMPinLM.begin(), lend=lMPinLM.end(); lit!=lend; lit++)
-	{
-		MapPoint* pMP=*lit;
-		flm.write(reinterpret_cast<char*>(&pMP->mnId),sizeof(long unsigned int));
-	}
+//	for(list<MapPoint*>::iterator lit=lMPinLM.begin(), lend=lMPinLM.end(); lit!=lend; lit++)
+//	{
+//		MapPoint* pMP=*lit;
+//		flm.write(reinterpret_cast<char*>(&pMP->mnId),sizeof(long unsigned int));
+//	}
 
-	flm.close();
+//	flm.close();
 	
 
-}
+//}
 
-bool LoadLocalMapThread(LocalMapping* pLM, MapMPIndexPointer *mpIdxPtMap)
-{
+//bool LoadLocalMapThread(LocalMapping* pLM, MapMPIndexPointer &mpIdxPtMap)
+//{
 	
-	fstream flm;
-	cout<<endl<<"Saving local mapping params"<<endl;
-	strFile = ros::package::getPath("ORB_SLAM")+"/tmp/"+"LocalMapParams.bin";
-	flm.open(strFile.c_str(), ios::in|ios::binary);
+//	fstream flm;
+//    cout<<endl<<"Loading local mapping params"<<endl;
+//    string strFile = ros::package::getPath("ORB_SLAM")+"/tmp/"+"LocalMapParams.bin";
+//	flm.open(strFile.c_str(), ios::in|ios::binary);
+//    if(!flm.is_open())
+//    {
+//        cerr<<"LocalMapParams.bin open error"<<endl;
+//        return false;
+//    }
 
-	size_t rampsize;
-	flm.read(reinterpret_cast<char*>(&rampsize),sizeof(size_t));
+//	size_t rampsize;
+//	flm.read(reinterpret_cast<char*>(&rampsize),sizeof(size_t));
 
-	list<MapPoint*> lMPinLM;// = pLM->GetmlpRecentAddedMapPoints();
-	for(size_t i=0;i<rampsize;i++)
-	{
-		long unsigned int mpId;
-		flm.read(reinterpret_cast<char*>(&mpId),sizeof(long unsigned int));
-		MapPoint* pMP=mpIdxPtMap[mpId];
-		lMPinLM->push_back(pMP);
+//	list<MapPoint*> lMPinLM;// = pLM->GetmlpRecentAddedMapPoints();
+//	for(size_t i=0;i<rampsize;i++)
+//	{
+//		long unsigned int mpId;
+//		flm.read(reinterpret_cast<char*>(&mpId),sizeof(long unsigned int));
+//        if(mpIdxPtMap.count(mpId)>0)
+//        {
 
-		if(flm.fail())	cerr<<"flm.fail(), shouldn't"<<endl;
-	}
+//            //cerr<<mpId<<" mpIdxPtMap.cout(mpId)==0, shouldn't"<<endl;
+//            MapPoint* pMP=mpIdxPtMap[mpId];
+//            lMPinLM.push_back(pMP);
+//        }
+//		if(flm.fail())	cerr<<"flm.fail(), shouldn't"<<endl;
+//	}
 	
-	pLM->SetmlpRecentAddedMapPoints(lMPinLM);
+//	pLM->SetmlpRecentAddedMapPoints(lMPinLM);
 
-	flm.close();
-
-}
+//	flm.close();
+//    return true;
+//}
 
 static bool myOpenFile(fstream &ifs, string strFile)
 {
@@ -2420,7 +2429,7 @@ bool loadMPKFPointers(MapMPIndexPointer &mpIdxPtMap, MapKFIndexPointer &kfIdxPtM
     return true;
 }
 
-bool LoadWroldFromFile(KeyFrameDatabase *db, Map *wd, ORBVocabulary* mpvoc, KeyFrame *pLastKF)
+bool LoadWroldFromFile(KeyFrameDatabase *db, Map *wd, ORBVocabulary* mpvoc, KeyFrame *pLastKF)//, MapMPIndexPointer &_mpIdxPtMap)
 {
 	MapMPIndexPointer mpIdxPtMap;
 	MapKFIndexPointer kfIdxPtMap;
@@ -2489,7 +2498,7 @@ bool LoadWroldFromFile(KeyFrameDatabase *db, Map *wd, ORBVocabulary* mpvoc, KeyF
 	}	
 
     pLastKF = kfIdxPtMap[maxKFid];
-
+    //_mpIdxPtMap = mpIdxPtMap;
 	
 	return (ret1&&ret2&&ret3&&ret4);
 }

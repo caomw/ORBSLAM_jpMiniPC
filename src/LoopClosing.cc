@@ -68,7 +68,7 @@ void LoopClosing::Run()
             fsloopclose<<"-"<<mpMatchedKF->mnId<<" ";
         fsloopclose<<"1-"<<mvConsistentGroups.size()<<" "<<mvpEnoughConsistentCandidates.size()<<" ";
         fsloopclose<<mvpCurrentConnectedKFs.size()<<" "<<mvpCurrentMatchedPoints.size()<<" ";
-        fsloopclose<<mvpLoopMapPoints.size()<<" "<<mScale_cw<<" "<<mLastLoopKFid;//<<endl;
+        fsloopclose<<mvpLoopMapPoints.size()<<" "<<mScale_cw<<" "<<mLastLoopKFid<<" end1."<<endl;
         // Check if there are keyframes in the queue
         if(CheckNewKeyFrames())
         {
@@ -87,7 +87,15 @@ void LoopClosing::Run()
         ResetIfRequested();
         r.sleep();
 
-        fsloopclose<<" end."<<endl;
+        fsloopclose<<ros::Time::now()<<" "<<mbResetRequested<<" "<<mlpLoopKeyFrameQueue.size()<<" ";
+        fsloopclose<<mvfLevelSigmaSquare.size()<<" "<<mnCovisibilityConsistencyTh<<" ";
+        if(mpCurrentKF)
+            fsloopclose<<mpCurrentKF->mnId<<" ";
+        if(mpMatchedKF)
+            fsloopclose<<"-"<<mpMatchedKF->mnId<<" ";
+        fsloopclose<<"1-"<<mvConsistentGroups.size()<<" "<<mvpEnoughConsistentCandidates.size()<<" ";
+        fsloopclose<<mvpCurrentConnectedKFs.size()<<" "<<mvpCurrentMatchedPoints.size()<<" ";
+        fsloopclose<<mvpLoopMapPoints.size()<<" "<<mScale_cw<<" "<<mLastLoopKFid<<" end2."<<endl;
     }
 }
 
@@ -437,7 +445,7 @@ void LoopClosing::CorrectLoop()
         cv::Mat Tiw = pKFi->GetPose();
 
         if(pKFi!=mpCurrentKF)
-        {            
+        {
             cv::Mat Tic = Tiw*Twc;
             cv::Mat Ric = Tic.rowRange(0,3).colRange(0,3);
             cv::Mat tic = Tic.rowRange(0,3).col(3);
@@ -499,7 +507,7 @@ void LoopClosing::CorrectLoop()
 
         // Make sure connections are updated
         pKFi->UpdateConnections();
-    }    
+    }
 
     // Start Loop Fusion
     // Update matched map points and replace if duplicated
