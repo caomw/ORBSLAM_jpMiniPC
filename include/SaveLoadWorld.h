@@ -10,6 +10,7 @@
 #include <MapPoint.h>
 #include <Map.h>
 #include <KeyFrameDatabase.h>
+#include <LocalMapping>
 
 #include<ros/ros.h>
 #include<ros/package.h>
@@ -1639,6 +1640,62 @@ void SaveWorldToFile( Map& World, KeyFrameDatabase& Database)
 	}
 	//1 ------------------------------------------------
 
+
+}
+
+void SaveLocalMapThread(LocalMapping* pLM)
+{
+
+	
+	//1 5. save local mappint params
+	//1 ------------------------------------------------
+	
+	fstream flm;
+	cout<<endl<<"Saving local mapping params"<<endl;
+	strFile = ros::package::getPath("ORB_SLAM")+"/tmp/"+"LocalMapParams.bin";
+	flm.open(strFile.c_str(), ios::out|ios::binary);
+
+	list<MapPoint*> lMPinLM = pLM->GetmlpRecentAddedMapPoints();
+	size_t rampsize = lMPinLM.size();
+	flm.write(reinterpret_cast<char*>(&rampsize),sizeof(size_t));
+	
+	for(list<MapPoint*>::iterator lit=lMPinLM.begin(), lend=lMPinLM.end(); lit!=lend; lit++)
+	{
+		MapPoint* pMP=*lit;
+		flm.write(reinterpret_cast<char*>(&pMP->mnId),sizeof(long unsigned int));
+	}
+
+	flm.close();
+	
+
+}
+
+bool LoadLocalMapThread(LocalMapping* pLM, MapMPIndexPointer *mpIdxPtMap)
+{
+	
+	fstream flm;
+	cout<<endl<<"Saving local mapping params"<<endl;
+	strFile = ros::package::getPath("ORB_SLAM")+"/tmp/"+"LocalMapParams.bin";
+	flm.open(strFile.c_str(), ios::in|ios::binary);
+
+	size_t rampsize;
+	flm.read(reinterpret_cast<char*>(&rampsize),sizeof(size_t));
+
+	list<MapPoint*> lMPinLM;// = pLM->GetmlpRecentAddedMapPoints();
+	for(size_t i=0;i<rampsize;i++)
+	{
+		long unsigned int mpId;
+		flm.read(reinterpret_cast<char*>(&mpId),sizeof(long unsigned int));
+		MapPoint* pMP=mpIdxPtMap[mpId];
+		lMPinLM->push_back(pMP);
+
+		if(flm.fail())	cerr<<"flm.fail(), shouldn't"<<endl;
+	}
+	
+	pLM->SetmlpRecentAddedMapPoints(lMPinLM);
+
+	flm.close();
+
 }
 
 static bool myOpenFile(fstream &ifs, string strFile)
@@ -2384,6 +2441,10 @@ bool LoadWroldFromFile(KeyFrameDatabase *db, Map *wd, ORBVocabulary* mpvoc, KeyF
 	//1 step 3. associate pointers in MPs and KFs
     cout<<"loading step 3.."<<endl;
     ret3=loadMPKFPointers(mpIdxPtMap, kfIdxPtMap, vKFmnId, vMPmnId, vRefKFIdInMP );
+	if(mpIdxPtMap.size()!=vMPmnId.size())
+		cerr<<"mpIdxPtMap.size()!=vMPmnId.size()"<<endl;
+	if(kfIdxPtMap.size()!=vKFmnId.size())
+		cerr<<"kfIdxPtMap.size()!=vKFmnId.size()"<<endl;
 
 	//1 step 4. associate pointers in invertfile of vocabulary
     cout<<"loading step 4.."<<endl;
