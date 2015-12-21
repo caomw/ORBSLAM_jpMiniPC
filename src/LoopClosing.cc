@@ -68,7 +68,7 @@ void LoopClosing::Run()
             fsloopclose<<"-"<<mpMatchedKF->mnId<<" ";
         fsloopclose<<"1-"<<mvConsistentGroups.size()<<" "<<mvpEnoughConsistentCandidates.size()<<" ";
         fsloopclose<<mvpCurrentConnectedKFs.size()<<" "<<mvpCurrentMatchedPoints.size()<<" ";
-        fsloopclose<<mvpLoopMapPoints.size()<<" "<<mScale_cw<<" "<<mLastLoopKFid<<endl;
+        fsloopclose<<mvpLoopMapPoints.size()<<" "<<mScale_cw<<" "<<mLastLoopKFid;//<<endl;
         // Check if there are keyframes in the queue
         if(CheckNewKeyFrames())
         {
@@ -86,6 +86,8 @@ void LoopClosing::Run()
 
         ResetIfRequested();
         r.sleep();
+
+        fsloopclose<<" end."<<endl;
     }
 }
 

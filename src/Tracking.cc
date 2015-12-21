@@ -181,7 +181,7 @@ void Tracking::GrabImage(const sensor_msgs::ImageConstPtr& msg)
     fstrack<<mnLastKeyFrameId<<" "<<mnLastRelocFrameId<<" ";
     fstrack<<mbPublisherStopped<<" "<<mbReseting<<" ";
     fstrack<<mbForceRelocalisation<<" "<<mbMotionModel<<" ";
-    fstrack<<endl;
+    //fstrack<<endl;
 
     cv::Mat im;
 
@@ -329,6 +329,7 @@ void Tracking::GrabImage(const sensor_msgs::ImageConstPtr& msg)
         mTfBr.sendTransform(tf::StampedTransform(tfTcw,ros::Time::now(), "ORB_SLAM/World", "ORB_SLAM/Camera"));
     }
 
+    fstrack<<" end"<<endl;
 }
 
 

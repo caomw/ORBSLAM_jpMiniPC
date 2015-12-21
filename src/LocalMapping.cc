@@ -56,7 +56,7 @@ void LocalMapping::Run()
         if(mpCurrentKeyFrame)
             fslocalmap<<mpCurrentKeyFrame->mnId<<" ";
         fslocalmap<<"1-"<<mlpRecentAddedMapPoints.size()<<" ";
-        fslocalmap<<mbAbortBA<<" "<<mbStopped<<" "<<mbStopRequested<<" "<<mbAcceptKeyFrames<<endl;
+        fslocalmap<<mbAbortBA<<" "<<mbStopped<<" "<<mbStopRequested<<" "<<mbAcceptKeyFrames<<" end1"<<endl;
 
         // Check if there are keyframes in the queue
         if(CheckNewKeyFrames())
@@ -96,6 +96,12 @@ void LocalMapping::Run()
             mpLoopCloser->InsertKeyFrame(mpCurrentKeyFrame);
         }
 
+        fslocalmap<<ros::Time::now()<<" "<<mbResetRequested<<" "<<mlNewKeyFrames.size()<<" ";
+        if(mpCurrentKeyFrame)
+            fslocalmap<<mpCurrentKeyFrame->mnId<<" ";
+        fslocalmap<<"1-"<<mlpRecentAddedMapPoints.size()<<" ";
+        fslocalmap<<mbAbortBA<<" "<<mbStopped<<" "<<mbStopRequested<<" "<<mbAcceptKeyFrames<<" end2"<<endl;
+
         // Safe area to stop
         if(stopRequested())
         {
@@ -111,6 +117,13 @@ void LocalMapping::Run()
 
         ResetIfRequested();
         r.sleep();
+
+
+        fslocalmap<<ros::Time::now()<<" "<<mbResetRequested<<" "<<mlNewKeyFrames.size()<<" ";
+        if(mpCurrentKeyFrame)
+            fslocalmap<<mpCurrentKeyFrame->mnId<<" ";
+        fslocalmap<<"1-"<<mlpRecentAddedMapPoints.size()<<" ";
+        fslocalmap<<mbAbortBA<<" "<<mbStopped<<" "<<mbStopRequested<<" "<<mbAcceptKeyFrames<<" end3"<<endl;
     }
 }
 

@@ -144,7 +144,7 @@ public:
 	void SetDescriptors(cv::Mat des)	{mDescriptors = des.clone();};
 	void SetmvpMapPoints(vector<MapPoint*> _vmps) {mvpMapPoints = _vmps;};
 	std::vector< std::vector <std::vector<size_t> > > GetmGrid(void) {return mGrid;};
-	vois SetmGrid(std::vector< std::vector <std::vector<size_t> > > _mGrid) {mGrid=_mGrid;};
+    void SetmGrid(std::vector< std::vector <std::vector<size_t> > > _mGrid) {mGrid=_mGrid;};
 	
 public:
     static long unsigned int nNextId;
